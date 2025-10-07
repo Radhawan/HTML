@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP System Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <span>ERP Dashboard</span>
+            </div>
+        </div>
+        <div class="header-center">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search..." id="searchInput">
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="notifications">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge">3</span>
+            </div>
+            <div class="user-profile">
+                <img src="https://via.placeholder.com/40x40/4f46e5/ffffff?text=JD" alt="User">
+                <span>John Doe</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <nav class="sidebar-nav">
+            <ul>
+                <li class="nav-item active">
+                    <a href="#" data-section="dashboard">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" data-section="sales">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Sales</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" data-section="inventory">
+                        <i class="fas fa-boxes"></i>
+                        <span>Inventory</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" data-section="customers">
+                        <i class="fas fa-users"></i>
+                        <span>Customers</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" data-section="orders">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Orders</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" data-section="finance">
+                        <i class="fas fa-dollar-sign"></i>
+                        <span>Finance</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" data-section="reports">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Reports</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" data-section="settings">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="content-section active">
+            <div class="page-header">
+                <h1>Dashboard Overview</h1>
+                <div class="date-range">
+                    <select id="dateRange">
+                        <option value="today">Today</option>
+                        <option value="week" selected>This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="quarter">This Quarter</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon sales">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Total Revenue</h3>
+                        <div class="kpi-value">$124,580</div>
+                        <div class="kpi-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+12.5%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon orders">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Total Orders</h3>
+                        <div class="kpi-value">1,247</div>
+                        <div class="kpi-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+8.2%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon customers">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>New Customers</h3>
+                        <div class="kpi-value">89</div>
+                        <div class="kpi-change negative">
+                            <i class="fas fa-arrow-down"></i>
+                            <span>-3.1%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon inventory">
+                        <i class="fas fa-boxes"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Inventory Value</h3>
+                        <div class="kpi-value">$89,420</div>
+                        <div class="kpi-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+5.7%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>Revenue Trend</h3>
+                        <div class="chart-actions">
+                            <button class="btn-icon"><i class="fas fa-download"></i></button>
+                            <button class="btn-icon"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <canvas id="revenueChart"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>Sales by Category</h3>
+                        <div class="chart-actions">
+                            <button class="btn-icon"><i class="fas fa-download"></i></button>
+                            <button class="btn-icon"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Activity & Quick Stats -->
+            <div class="dashboard-bottom">
+                <div class="recent-activity">
+                    <div class="section-header">
+                        <h3>Recent Activity</h3>
+                        <a href="#" class="view-all">View All</a>
+                    </div>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon new-order">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">New order #12847</div>
+                                <div class="activity-time">2 minutes ago</div>
+                            </div>
+                            <div class="activity-amount">$245.00</div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon payment">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">Payment received</div>
+                                <div class="activity-time">15 minutes ago</div>
+                            </div>
+                            <div class="activity-amount">$1,250.00</div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon customer">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">New customer registered</div>
+                                <div class="activity-time">1 hour ago</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon inventory">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">Low stock alert: Product XYZ</div>
+                                <div class="activity-time">2 hours ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-stats">
+                    <div class="section-header">
+                        <h3>Quick Stats</h3>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Conversion Rate</div>
+                            <div class="stat-value">3.2%</div>
+                            <div class="stat-bar">
+                                <div class="stat-progress" style="width: 32%"></div>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Customer Satisfaction</div>
+                            <div class="stat-value">4.8/5</div>
+                            <div class="stat-bar">
+                                <div class="stat-progress" style="width: 96%"></div>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Order Fulfillment</div>
+                            <div class="stat-value">98.5%</div>
+                            <div class="stat-bar">
+                                <div class="stat-progress" style="width: 98.5%"></div>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Return Rate</div>
+                            <div class="stat-value">2.1%</div>
+                            <div class="stat-bar">
+                                <div class="stat-progress negative" style="width: 21%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Other sections (placeholder content) -->
+        <section id="sales" class="content-section">
+            <div class="page-header">
+                <h1>Sales Management</h1>
+            </div>
+            <div class="placeholder-content">
+                <i class="fas fa-chart-bar"></i>
+                <h3>Sales Management</h3>
+                <p>Sales analytics, performance tracking, and sales team management tools would be displayed here.</p>
+            </div>
+        </section>
+
+        <section id="inventory" class="content-section">
+            <div class="page-header">
+                <h1>Inventory Management</h1>
+            </div>
+            <div class="placeholder-content">
+                <i class="fas fa-boxes"></i>
+                <h3>Inventory Management</h3>
+                <p>Stock levels, product catalog, and inventory tracking features would be displayed here.</p>
+            </div>
+        </section>
+
+        <section id="customers" class="content-section">
+            <div class="page-header">
+                <h1>Customer Management</h1>
+            </div>
+            <div class="placeholder-content">
+                <i class="fas fa-users"></i>
+                <h3>Customer Management</h3>
+                <p>Customer database, contact information, and relationship management tools would be displayed here.</p>
+            </div>
+        </section>
+
+        <section id="orders" class="content-section">
+            <div class="page-header">
+                <h1>Order Management</h1>
+            </div>
+            <div class="placeholder-content">
+                <i class="fas fa-shopping-cart"></i>
+                <h3>Order Management</h3>
+                <p>Order processing, fulfillment tracking, and order history would be displayed here.</p>
+            </div>
+        </section>
+
+        <section id="finance" class="content-section">
+            <div class="page-header">
+                <h1>Financial Management</h1>
+            </div>
+            <div class="placeholder-content">
+                <i class="fas fa-dollar-sign"></i>
+                <h3>Financial Management</h3>
+                <p>Accounting, invoicing, payments, and financial reporting tools would be displayed here.</p>
+            </div>
+        </section>
+
+        <section id="reports" class="content-section">
+            <div class="page-header">
+                <h1>Reports & Analytics</h1>
+            </div>
+            <div class="placeholder-content">
+                <i class="fas fa-file-alt"></i>
+                <h3>Reports & Analytics</h3>
+                <p>Business intelligence, custom reports, and data visualization tools would be displayed here.</p>
+            </div>
+        </section>
+
+        <section id="settings" class="content-section">
+            <div class="page-header">
+                <h1>System Settings</h1>
+            </div>
+            <div class="placeholder-content">
+                <i class="fas fa-cog"></i>
+                <h3>System Settings</h3>
+                <p>User management, system configuration, and application settings would be displayed here.</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
