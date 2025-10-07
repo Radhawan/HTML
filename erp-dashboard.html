@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ERP Dashboard</title>
+  <meta name="description" content="Single-file ERP System Dashboard - responsive, accessible, with charts and interactivity" />
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --surface: #ffffff;
+      --text: #111827;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --primary: #2563eb;
+      --primary-600: #1d4ed8;
+      --accent: #14b8a6;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow: 0 10px 20px rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.04);
+      --radius: 12px;
+      --sidebar-w: 260px;
+      --sidebar-w-collapsed: 76px;
+      --focus: 0 0 0 3px rgba(37, 99, 235, 0.4);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0b1220;
+      --surface: #0f172a;
+      --text: #e5e7eb;
+      --text-muted: #9ca3af;
+      --border: #1f2937;
+      --primary: #60a5fa;
+      --primary-600: #3b82f6;
+      --accent: #22d3ee;
+      --warning: #fbbf24;
+      --danger: #fb7185;
+      --shadow: 0 10px 20px rgba(0,0,0,0.35), 0 2px 6px rgba(0,0,0,0.25);
+      --focus: 0 0 0 3px rgba(96, 165, 250, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      grid-template-rows: auto 1fr;
+      grid-template-areas:
+        "sidebar header"
+        "sidebar main";
+      min-height: 100vh;
+      transition: grid-template-columns 220ms ease;
+    }
+
+    .layout[data-collapsed="true"] {
+      grid-template-columns: var(--sidebar-w-collapsed) 1fr;
+    }
+
+    /* Sidebar */
+    aside.sidebar {
+      grid-area: sidebar;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand-logo {
+      width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white; font-weight: 800; letter-spacing: -0.02em;
+      box-shadow: var(--shadow);
+      flex: 0 0 auto;
+    }
+    .brand-name { font-weight: 800; letter-spacing: -0.02em; }
+
+    nav.sidebar-nav { padding: 12px; overflow: auto; flex: 1 1 auto; }
+
+    .nav-section { margin: 8px 0 12px; color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px; border-radius: 10px; color: var(--text);
+      text-decoration: none; cursor: pointer;
+    }
+    .nav-item:hover { background: rgba(0,0,0,0.04); }
+    [data-theme="dark"] .nav-item:hover { background: rgba(255,255,255,0.06); }
+    .nav-item[aria-current="page"] { background: rgba(37,99,235,0.12); color: var(--primary-600); }
+
+    .nav-icon { width: 20px; height: 20px; display: inline-grid; place-items: center; }
+    .nav-label { white-space: nowrap; }
+
+    .layout[data-collapsed="true"] .nav-label { display: none; }
+    .layout[data-collapsed="true"] .brand-name { display: none; }
+
+    .sidebar-footer { padding: 12px; border-top: 1px solid var(--border); }
+
+    /* Header */
+    header.topbar {
+      grid-area: header;
+      position: sticky; top: 0; z-index: 10;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+    }
+
+    .icon-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 38px; height: 38px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text); cursor: pointer;
+    }
+    .icon-btn:focus-visible { outline: none; box-shadow: var(--focus); }
+    .icon-btn:hover { background: rgba(0,0,0,0.04); }
+    [data-theme="dark"] .icon-btn:hover { background: rgba(255,255,255,0.06); }
+
+    .search {
+      position: relative; flex: 1 1 auto; max-width: 560px;
+    }
+    .search input {
+      width: 100%; padding: 10px 38px 10px 40px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--bg); color: var(--text);
+    }
+    .search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+
+    .topbar-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+    /* Main */
+    main {
+      grid-area: main; padding: 18px; display: grid; gap: 18px;
+      grid-template-rows: auto auto auto 1fr;
+    }
+
+    .kpis { display: grid; gap: 18px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    @media (max-width: 1200px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 640px) { .kpis { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .card .card-body { padding: 16px; }
+    .card .card-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .card h3 { margin: 0; font-size: 14px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.02em; }
+
+    .kpi {
+      display: grid; gap: 8px;
+    }
+    .kpi-value { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+    .kpi-delta { font-size: 12px; color: var(--text-muted); }
+    .delta-up { color: var(--accent); }
+    .delta-down { color: var(--danger); }
+
+    .two-col { display: grid; grid-template-columns: 1.3fr 1fr; gap: 18px; }
+    @media (max-width: 1200px) { .two-col { grid-template-columns: 1fr; } }
+
+    .filters { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .filters .select, .filters .button { height: 36px; }
+    .select, .button {
+      display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer;
+    }
+    .button.primary { background: var(--primary); color: white; border-color: var(--primary); }
+    .button.primary:hover { background: var(--primary-600); }
+
+    /* Table */
+    .table-wrap { overflow: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 12px 10px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+    thead th { position: sticky; top: 0; background: var(--surface); z-index: 1; }
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable .sort { opacity: 0.5; margin-left: 6px; }
+
+    .status { display: inline-flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: 999px; font-size: 12px; border: 1px dashed var(--border); }
+    .status-dot { width: 8px; height: 8px; border-radius: 999px; }
+    .status.Pending .status-dot { background: var(--warning); }
+    .status.Shipped .status-dot { background: var(--primary); }
+    .status.Delivered .status-dot { background: var(--accent); }
+    .status.Cancelled .status-dot { background: var(--danger); }
+
+    /* Footer spacing */
+    .spacer { height: 12px; }
+
+    /* Collapsed tweaks */
+    .layout[data-collapsed="true"] .brand { justify-content: center; }
+
+    /* Mobile tweaks */
+    @media (max-width: 860px) {
+      .layout { grid-template-areas:
+        "header header"
+        "main main"; grid-template-columns: 1fr; }
+      aside.sidebar { position: fixed; inset: 0 auto 0 0; transform: translateX(-100%); width: var(--sidebar-w); transition: transform 220ms ease; }
+      aside.sidebar[data-open="true"] { transform: translateX(0); }
+      .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: none; }
+      .overlay[data-open="true"] { display: block; }
+    }
+
+    /* Focus visibility for a11y */
+    a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible { outline: none; box-shadow: var(--focus); }
+  </style>
+</head>
+<body>
+  <div class="layout" id="layout" data-collapsed="false">
+    <aside class="sidebar" id="sidebar" aria-label="Sidebar Navigation">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true">ERP</div>
+        <div class="brand-name">Acme ERP</div>
+      </div>
+      <nav class="sidebar-nav" aria-label="Primary">
+        <div class="nav-section">Overview</div>
+        <a class="nav-item" href="#" aria-current="page">
+          <span class="nav-icon" aria-hidden="true">🏠</span>
+          <span class="nav-label">Dashboard</span>
+        </a>
+        <a class="nav-item" href="#">
+          <span class="nav-icon" aria-hidden="true">📦</span>
+          <span class="nav-label">Inventory</span>
+        </a>
+        <a class="nav-item" href="#">
+          <span class="nav-icon" aria-hidden="true">🧾</span>
+          <span class="nav-label">Orders</span>
+        </a>
+        <a class="nav-item" href="#">
+          <span class="nav-icon" aria-hidden="true">👥</span>
+          <span class="nav-label">Customers</span>
+        </a>
+        <div class="nav-section">Finance</div>
+        <a class="nav-item" href="#">
+          <span class="nav-icon" aria-hidden="true">💳</span>
+          <span class="nav-label">Billing</span>
+        </a>
+        <a class="nav-item" href="#">
+          <span class="nav-icon" aria-hidden="true">📈</span>
+          <span class="nav-label">Reports</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <button id="collapseBtn" class="button" aria-label="Collapse sidebar" aria-expanded="true" style="width:100%">
+          <span>Toggle Sidebar</span>
+        </button>
+      </div>
+    </aside>
+
+    <div class="overlay" id="overlay" hidden></div>
+
+    <header class="topbar" role="banner">
+      <button id="mobileMenuBtn" class="icon-btn" aria-label="Open menu" aria-controls="sidebar" aria-expanded="false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="search" role="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="globalSearch" type="search" placeholder="Search orders, customers, products…" aria-label="Global search" />
+      </div>
+      <div class="topbar-actions">
+        <button id="themeToggle" class="icon-btn" aria-label="Toggle theme" aria-pressed="false" title="Toggle theme">
+          <span id="themeIcon" aria-hidden="true">🌞</span>
+        </button>
+        <button class="icon-btn" aria-label="Notifications">
+          🔔
+        </button>
+        <button class="icon-btn" aria-label="User menu">
+          <span aria-hidden="true">👤</span>
+        </button>
+      </div>
+    </header>
+
+    <main id="main" role="main">
+      <section class="kpis" aria-label="Key metrics">
+        <article class="card kpi">
+          <div class="card-body">
+            <h3>Total Revenue</h3>
+            <div class="kpi-value" id="kpiRevenue">$0</div>
+            <div class="kpi-delta" id="kpiRevenueDelta"><span class="delta-up">▲ 0.0%</span> vs prev period</div>
+          </div>
+        </article>
+        <article class="card kpi">
+          <div class="card-body">
+            <h3>Orders</h3>
+            <div class="kpi-value" id="kpiOrders">0</div>
+            <div class="kpi-delta" id="kpiOrdersDelta"><span class="delta-up">▲ 0.0%</span> vs prev period</div>
+          </div>
+        </article>
+        <article class="card kpi">
+          <div class="card-body">
+            <h3>Customers</h3>
+            <div class="kpi-value" id="kpiCustomers">0</div>
+            <div class="kpi-delta" id="kpiCustomersDelta"><span class="delta-up">▲ 0.0%</span> vs prev period</div>
+          </div>
+        </article>
+        <article class="card kpi">
+          <div class="card-body">
+            <h3>Inventory</h3>
+            <div class="kpi-value" id="kpiInventory">0</div>
+            <div class="kpi-delta" id="kpiInventoryDelta"><span class="delta-down">▼ 0.0%</span> low stock</div>
+          </div>
+        </article>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <h3>Performance</h3>
+          <div class="filters">
+            <label>
+              <span class="sr-only">Date range</span>
+              <select id="dateRange" class="select" aria-label="Date range">
+                <option value="7">Last 7 days</option>
+                <option value="30" selected>Last 30 days</option>
+                <option value="90">Last 90 days</option>
+                <option value="365">Last year</option>
+              </select>
+            </label>
+            <label>
+              <span class="sr-only">Order status</span>
+              <select id="statusFilter" class="select" aria-label="Order status">
+                <option value="all" selected>All statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Shipped">Shipped</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </label>
+            <button id="resetFilters" class="button" type="button">Reset</button>
+          </div>
+        </div>
+        <div class="card-body two-col">
+          <div>
+            <canvas id="revenueChart" height="130" aria-label="Revenue trend chart" role="img"></canvas>
+          </div>
+          <div>
+            <canvas id="statusChart" height="130" aria-label="Orders by status chart" role="img"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <h3>Recent Orders</h3>
+          <div class="filters">
+            <input id="tableSearch" type="search" placeholder="Search orders…" class="select" aria-label="Search table" />
+            <button id="exportCsv" class="button" type="button">Export CSV</button>
+          </div>
+        </div>
+        <div class="card-body table-wrap">
+          <table id="ordersTable" aria-label="Recent orders table">
+            <thead>
+              <tr>
+                <th class="sortable" data-key="id" scope="col">Order # <span class="sort">⇅</span></th>
+                <th class="sortable" data-key="date" scope="col">Date <span class="sort">⇅</span></th>
+                <th class="sortable" data-key="customer" scope="col">Customer <span class="sort">⇅</span></th>
+                <th class="sortable" data-key="status" scope="col">Status <span class="sort">⇅</span></th>
+                <th class="sortable" data-key="amount" scope="col">Amount <span class="sort">⇅</span></th>
+              </tr>
+            </thead>
+            <tbody id="ordersTbody">
+              <tr><td colspan="5">Loading…</td></tr>
+            </tbody>
+          </table>
+          <div class="spacer"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" integrity="sha384-h1sZjw/5mZ3i3aQFdCiQ6xw6GqSqJ+8zJ2GaI3b6PpAUGS4r5eQvxzT8OQvO3aXx" crossorigin="anonymous"></script>
+
+  <script>
+    (function() {
+      const htmlEl = document.documentElement;
+      const layoutEl = document.getElementById('layout');
+      const sidebarEl = document.getElementById('sidebar');
+      const overlayEl = document.getElementById('overlay');
+      const collapseBtn = document.getElementById('collapseBtn');
+      const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+      const themeToggle = document.getElementById('themeToggle');
+      const themeIcon = document.getElementById('themeIcon');
+      const globalSearch = document.getElementById('globalSearch');
+
+      const dateRange = document.getElementById('dateRange');
+      const statusFilter = document.getElementById('statusFilter');
+      const resetFilters = document.getElementById('resetFilters');
+
+      const tableSearch = document.getElementById('tableSearch');
+      const exportCsv = document.getElementById('exportCsv');
+
+      const ordersTable = document.getElementById('ordersTable');
+      const ordersTbody = document.getElementById('ordersTbody');
+
+      const kpiRevenue = document.getElementById('kpiRevenue');
+      const kpiRevenueDelta = document.getElementById('kpiRevenueDelta');
+      const kpiOrders = document.getElementById('kpiOrders');
+      const kpiOrdersDelta = document.getElementById('kpiOrdersDelta');
+      const kpiCustomers = document.getElementById('kpiCustomers');
+      const kpiCustomersDelta = document.getElementById('kpiCustomersDelta');
+      const kpiInventory = document.getElementById('kpiInventory');
+      const kpiInventoryDelta = document.getElementById('kpiInventoryDelta');
+
+      const statuses = ['Pending', 'Shipped', 'Delivered', 'Cancelled'];
+      const customerNames = [
+        'Acme Corp', 'Globex', 'Initech', 'Stark Industries', 'Wayne Enterprises',
+        'Umbrella Co', 'Gringotts', 'Wonka LLC', 'Soylent', 'Tyrell Corp',
+        'Cyberdyne', 'Hooli', 'Gekko & Co', 'Massive Dynamic', 'Monsters Inc'
+      ];
+
+      const state = {
+        rangeDays: Number(localStorage.getItem('erp-rangeDays')) || 30,
+        status: localStorage.getItem('erp-status') || 'all',
+        search: '',
+        sortKey: 'date',
+        sortDir: 'desc',
+        theme: localStorage.getItem('erp-theme') || 'light',
+        sidebarCollapsed: JSON.parse(localStorage.getItem('erp-sidebar-collapsed') || 'false'),
+      };
+
+      htmlEl.setAttribute('data-theme', state.theme);
+      themeToggle.setAttribute('aria-pressed', state.theme === 'dark');
+      themeIcon.textContent = state.theme === 'dark' ? '🌙' : '🌞';
+
+      layoutEl.setAttribute('data-collapsed', String(state.sidebarCollapsed));
+      collapseBtn.setAttribute('aria-expanded', String(!state.sidebarCollapsed));
+
+      dateRange.value = String(state.rangeDays);
+      statusFilter.value = state.status;
+
+      // Mobile sidebar open/close
+      const isMobile = () => window.matchMedia('(max-width: 860px)').matches;
+      const closeMobileSidebar = () => {
+        if (!isMobile()) return;
+        sidebarEl.removeAttribute('data-open');
+        overlayEl.removeAttribute('data-open');
+        overlayEl.setAttribute('hidden', '');
+        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+      };
+      const openMobileSidebar = () => {
+        if (!isMobile()) return;
+        sidebarEl.setAttribute('data-open', 'true');
+        overlayEl.setAttribute('data-open', 'true');
+        overlayEl.removeAttribute('hidden');
+        mobileMenuBtn.setAttribute('aria-expanded', 'true');
+      };
+
+      mobileMenuBtn.addEventListener('click', () => {
+        if (sidebarEl.getAttribute('data-open') === 'true') { closeMobileSidebar(); } else { openMobileSidebar(); }
+      });
+      overlayEl.addEventListener('click', closeMobileSidebar);
+
+      // Theme toggle
+      themeToggle.addEventListener('click', () => {
+        state.theme = state.theme === 'light' ? 'dark' : 'light';
+        htmlEl.setAttribute('data-theme', state.theme);
+        themeToggle.setAttribute('aria-pressed', String(state.theme === 'dark'));
+        themeIcon.textContent = state.theme === 'dark' ? '🌙' : '🌞';
+        localStorage.setItem('erp-theme', state.theme);
+        // Update charts to use theme-aware grid/tooltip colors
+        updateChartsAppearance();
+      });
+
+      // Sidebar collapse (desktop)
+      collapseBtn.addEventListener('click', () => {
+        state.sidebarCollapsed = !state.sidebarCollapsed;
+        layoutEl.setAttribute('data-collapsed', String(state.sidebarCollapsed));
+        collapseBtn.setAttribute('aria-expanded', String(!state.sidebarCollapsed));
+        localStorage.setItem('erp-sidebar-collapsed', JSON.stringify(state.sidebarCollapsed));
+      });
+
+      // Global search (filters table only in this demo)
+      globalSearch.addEventListener('input', (e) => {
+        state.search = String(e.target.value || '').trim();
+        render();
+      });
+
+      // Filters
+      dateRange.addEventListener('change', () => {
+        state.rangeDays = Number(dateRange.value);
+        localStorage.setItem('erp-rangeDays', String(state.rangeDays));
+        regenerateData();
+        render();
+      });
+      statusFilter.addEventListener('change', () => {
+        state.status = statusFilter.value;
+        localStorage.setItem('erp-status', state.status);
+        render();
+      });
+      resetFilters.addEventListener('click', () => {
+        state.rangeDays = 30; state.status = 'all'; state.search = '';
+        dateRange.value = '30'; statusFilter.value = 'all'; globalSearch.value = '';
+        regenerateData();
+        render();
+      });
+
+      tableSearch.addEventListener('input', (e) => {
+        state.search = String(e.target.value || '').trim();
+        render();
+      });
+
+      exportCsv.addEventListener('click', () => {
+        const rows = getFilteredOrders();
+        const csv = [
+          ['Order #','Date','Customer','Status','Amount'],
+          ...rows.map(r => [r.id, formatDate(r.date), r.customer, r.status, r.amount.toFixed(2)])
+        ].map(r => r.map(v => '"' + String(v).replaceAll('"', '""') + '"').join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'orders.csv'; a.click(); URL.revokeObjectURL(url);
+      });
+
+      // Sorting
+      ordersTable.querySelectorAll('th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+          const key = th.getAttribute('data-key');
+          if (!key) return;
+          if (state.sortKey === key) {
+            state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+          } else {
+            state.sortKey = key; state.sortDir = 'asc';
+          }
+          render();
+        });
+      });
+
+      // Data generation
+      function randomBetween(min, max) { return Math.random() * (max - min) + min; }
+      function formatCurrency(n) { return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(n); }
+      function formatDate(d) { return new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: '2-digit' }).format(d); }
+
+      function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+      let orders = [];
+
+      function generateOrders(days) {
+        const list = [];
+        const today = new Date();
+        for (let i = 0; i < days; i++) {
+          const date = new Date(today);
+          date.setDate(today.getDate() - i);
+          const countForDay = Math.floor(randomBetween(6, 18));
+          for (let c = 0; c < countForDay; c++) {
+            const status = pick(statuses);
+            const id = 100000 + list.length + 1;
+            const amountBase = status === 'Cancelled' ? randomBetween(10, 120) : randomBetween(50, 1200);
+            const customer = pick(customerNames);
+            const amount = Math.round(amountBase * 100) / 100;
+            const jitter = Math.floor(randomBetween(0, 23));
+            const d = new Date(date); d.setHours(jitter);
+            list.push({ id, date: d, customer, status, amount });
+          }
+        }
+        return list;
+      }
+
+      function regenerateData() {
+        orders = generateOrders(state.rangeDays);
+      }
+
+      function getFilteredOrders() {
+        const q = state.search.toLowerCase();
+        const filtered = orders.filter(o => {
+          if (state.status !== 'all' && o.status !== state.status) return false;
+          if (!q) return true;
+          return (
+            String(o.id).includes(q) ||
+            o.customer.toLowerCase().includes(q) ||
+            o.status.toLowerCase().includes(q)
+          );
+        });
+        return filtered.sort((a, b) => {
+          const dir = state.sortDir === 'asc' ? 1 : -1;
+          const ka = a[state.sortKey];
+          const kb = b[state.sortKey];
+          if (state.sortKey === 'date') return (ka - kb) * dir;
+          if (state.sortKey === 'amount') return (ka - kb) * dir;
+          if (state.sortKey === 'id') return (ka - kb) * dir;
+          return String(ka).localeCompare(String(kb)) * dir;
+        });
+      }
+
+      // KPIs
+      function updateKpis(rows) {
+        const revenue = rows.filter(r => r.status !== 'Cancelled').reduce((s, r) => s + r.amount, 0);
+        const ordersCount = rows.length;
+        const customers = new Set(rows.map(r => r.customer)).size;
+        const inventory = Math.max(0, Math.round(5000 - revenue / 10));
+
+        kpiRevenue.textContent = formatCurrency(revenue);
+        kpiOrders.textContent = String(ordersCount);
+        kpiCustomers.textContent = String(customers);
+        kpiInventory.textContent = String(inventory);
+
+        // Simple mock deltas
+        function pctDelta() { return (Math.random() * 10 - 2).toFixed(1); }
+        const rDelta = Number(pctDelta());
+        const oDelta = Number(pctDelta());
+        const cDelta = Number(pctDelta());
+        const iDelta = Number(pctDelta());
+
+        kpiRevenueDelta.innerHTML = `${rDelta >= 0 ? '<span class="delta-up">▲' : '<span class="delta-down">▼'} ${Math.abs(rDelta).toFixed(1)}%</span> vs prev period`;
+        kpiOrdersDelta.innerHTML = `${oDelta >= 0 ? '<span class="delta-up">▲' : '<span class="delta-down">▼'} ${Math.abs(oDelta).toFixed(1)}%</span> vs prev period`;
+        kpiCustomersDelta.innerHTML = `${cDelta >= 0 ? '<span class="delta-up">▲' : '<span class="delta-down">▼'} ${Math.abs(cDelta).toFixed(1)}%</span> vs prev period`;
+        kpiInventoryDelta.innerHTML = `${iDelta >= 0 ? '<span class="delta-up">▲' : '<span class="delta-down">▼'} ${Math.abs(iDelta).toFixed(1)}%</span> low stock`;
+      }
+
+      // Table
+      function renderTable(rows) {
+        if (rows.length === 0) {
+          ordersTbody.innerHTML = '<tr><td colspan="5">No results</td></tr>';
+          return;
+        }
+        const frag = document.createDocumentFragment();
+        rows.forEach(r => {
+          const tr = document.createElement('tr');
+          const id = document.createElement('td'); id.textContent = String(r.id); tr.appendChild(id);
+          const dt = document.createElement('td'); dt.textContent = formatDate(r.date); tr.appendChild(dt);
+          const cust = document.createElement('td'); cust.textContent = r.customer; tr.appendChild(cust);
+          const st = document.createElement('td');
+          st.innerHTML = `<span class="status ${r.status}"><span class="status-dot"></span>${r.status}</span>`; tr.appendChild(st);
+          const amt = document.createElement('td'); amt.textContent = formatCurrency(r.amount); tr.appendChild(amt);
+          frag.appendChild(tr);
+        });
+        ordersTbody.replaceChildren(frag);
+      }
+
+      // Charts
+      const revenueCtx = document.getElementById('revenueChart');
+      const statusCtx = document.getElementById('statusChart');
+      let revenueChart, statusChart;
+
+      function getThemeChartColors() {
+        const isDark = htmlEl.getAttribute('data-theme') === 'dark';
+        return {
+          grid: isDark ? 'rgba(148,163,184,0.18)' : 'rgba(100,116,139,0.22)',
+          tick: isDark ? 'rgba(226,232,240,0.85)' : 'rgba(30,41,59,0.85)',
+          tooltipBg: isDark ? 'rgba(15,23,42,0.92)' : 'rgba(255,255,255,0.95)',
+          tooltipText: isDark ? '#e5e7eb' : '#111827',
+        };
+      }
+
+      function createCharts() {
+        const theme = getThemeChartColors();
+        revenueChart = new Chart(revenueCtx, {
+          type: 'line',
+          data: { labels: [], datasets: [{ label: 'Revenue', data: [], borderColor: getComputedStyle(htmlEl).getPropertyValue('--primary').trim(), backgroundColor: 'transparent', tension: 0.35, pointRadius: 0, borderWidth: 3 }] },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: { grid: { color: theme.grid }, ticks: { color: theme.tick } },
+              y: { grid: { color: theme.grid }, ticks: { color: theme.tick } }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: { backgroundColor: theme.tooltipBg, titleColor: theme.tooltipText, bodyColor: theme.tooltipText, borderWidth: 0 }
+            }
+          }
+        });
+
+        statusChart = new Chart(statusCtx, {
+          type: 'doughnut',
+          data: { labels: statuses, datasets: [{ data: [], backgroundColor: ['#f59e0b', getComputedStyle(htmlEl).getPropertyValue('--primary').trim(), '#14b8a6', '#ef4444'], borderWidth: 0 }] },
+          options: {
+            plugins: { legend: { position: 'bottom', labels: { color: getThemeChartColors().tick } }, tooltip: { backgroundColor: theme.tooltipBg, titleColor: theme.tooltipText, bodyColor: theme.tooltipText } },
+            cutout: '58%'
+          }
+        });
+      }
+
+      function updateChartsAppearance() {
+        if (!revenueChart || !statusChart) return;
+        const theme = getThemeChartColors();
+        revenueChart.options.scales.x.grid.color = theme.grid;
+        revenueChart.options.scales.y.grid.color = theme.grid;
+        revenueChart.options.scales.x.ticks.color = theme.tick;
+        revenueChart.options.scales.y.ticks.color = theme.tick;
+        revenueChart.options.plugins.tooltip.backgroundColor = theme.tooltipBg;
+        revenueChart.options.plugins.tooltip.titleColor = theme.tooltipText;
+        revenueChart.options.plugins.tooltip.bodyColor = theme.tooltipText;
+
+        statusChart.options.plugins.legend.labels.color = theme.tick;
+        statusChart.options.plugins.tooltip.backgroundColor = theme.tooltipBg;
+        statusChart.options.plugins.tooltip.titleColor = theme.tooltipText;
+        statusChart.options.plugins.tooltip.bodyColor = theme.tooltipText;
+        revenueChart.update('none');
+        statusChart.update('none');
+      }
+
+      function updateCharts(rows) {
+        // Revenue by day
+        const map = new Map();
+        rows.forEach(r => {
+          const key = r.date.toISOString().slice(0,10);
+          const value = (map.get(key) || 0) + (r.status === 'Cancelled' ? 0 : r.amount);
+          map.set(key, value);
+        });
+        const keys = Array.from(map.keys()).sort();
+        const values = keys.map(k => Math.round(map.get(k) * 100) / 100);
+        revenueChart.data.labels = keys.map(k => new Date(k)).map(formatDate);
+        revenueChart.data.datasets[0].data = values;
+        revenueChart.update('none');
+
+        // Orders by status
+        const byStatus = statuses.map(s => rows.filter(r => r.status === s).length);
+        statusChart.data.datasets[0].data = byStatus;
+        statusChart.update('none');
+      }
+
+      // Render orchestrator
+      function render() {
+        const rows = getFilteredOrders();
+        updateKpis(rows);
+        renderTable(rows);
+        updateCharts(rows);
+      }
+
+      // Init
+      regenerateData();
+      createCharts();
+      render();
+
+      // Resize observer for charts to reflow within card containers
+      const ro = new ResizeObserver(() => {
+        revenueChart?.resize();
+        statusChart?.resize();
+      });
+      ro.observe(document.getElementById('main'));
+    })();
+  </script>
+</body>
+</html>
