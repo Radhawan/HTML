@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERP Dashboard</title>
+    <meta name="color-scheme" content="light dark" />
+    <style>
+      /* CSS variables for theming */
+      :root {
+        --bg: #f6f8fb;
+        --bg-elevated: #ffffff;
+        --card: #ffffff;
+        --text: #0f172a;
+        --muted: #64748b;
+        --border: #e5e7eb;
+        --primary: #2563eb;
+        --primary-weak: #dbeafe;
+        --success: #16a34a;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --ring: rgba(37, 99, 235, 0.4);
+        --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.1);
+      }
+      html.dark {
+        --bg: #0b1220;
+        --bg-elevated: #0e1628;
+        --card: #0e1628;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --border: #22304a;
+        --primary: #60a5fa;
+        --primary-weak: rgba(96, 165, 250, 0.2);
+        --ring: rgba(96, 165, 250, 0.4);
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.4);
+      }
+
+      /* Reset & base */
+      *, *::before, *::after { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+        color: var(--text);
+        background: linear-gradient(180deg, var(--bg), var(--bg));
+      }
+      img, svg { display: block; }
+      a { color: inherit; text-decoration: none; }
+      button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+      input { font: inherit; color: inherit; }
+      ::selection { background: var(--primary-weak); }
+      :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 6px; }
+
+      /* Layout */
+      .layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+      .sidebar {
+        background: var(--bg-elevated);
+        border-right: 1px solid var(--border);
+        padding: 20px 16px;
+        position: sticky; top: 0; height: 100vh; overflow: auto;
+      }
+      .brand { display: flex; align-items: center; gap: 10px; padding: 8px 10px; margin-bottom: 12px; }
+      .brand-logo { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; background: var(--primary-weak); color: var(--primary); }
+      .brand-name { font-weight: 700; letter-spacing: 0.2px; }
+      .sidebar .section-title { margin: 18px 10px 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
+      .nav { display: grid; gap: 4px; }
+      .nav a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; color: var(--muted); }
+      .nav a .icon { width: 18px; height: 18px; color: var(--muted); }
+      .nav a.active, .nav a:hover { background: var(--primary-weak); color: var(--text); }
+
+      .main { display: grid; grid-template-rows: auto 1fr; }
+      .topbar {
+        position: sticky; top: 0; z-index: 10;
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: saturate(180%) blur(12px);
+        -webkit-backdrop-filter: saturate(180%) blur(12px);
+        border-bottom: 1px solid var(--border);
+        padding: 12px 20px;
+      }
+      html.dark .topbar { background: rgba(14, 22, 40, 0.6); }
+      .topbar-row { display: flex; align-items: center; gap: 12px; }
+      .topbar-title { font-size: 18px; font-weight: 700; margin-right: 8px; }
+      .spacer { flex: 1; }
+
+      .search { position: relative; width: min(460px, 55vw); }
+      .search input {
+        width: 100%; padding: 10px 36px 10px 36px; border-radius: 10px; border: 1px solid var(--border);
+        background: var(--card);
+      }
+      .search .s-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--muted); }
+
+      .toolbar { display: flex; align-items: center; gap: 10px; }
+
+      /* Switch */
+      .switch { position: relative; width: 46px; height: 26px; }
+      .switch input { position: absolute; opacity: 0; inset: 0; }
+      .switch .track {
+        position: absolute; inset: 0; background: var(--border); border-radius: 999px; transition: background 0.2s;
+      }
+      .switch .thumb {
+        position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; background: var(--card); border: 1px solid var(--border);
+        border-radius: 999px; box-shadow: var(--shadow); transition: transform 0.2s ease-in-out;
+      }
+      .switch input:checked + .track { background: var(--primary-weak); }
+      .switch input:checked + .track + .thumb { transform: translateX(20px); }
+
+      /* Content */
+      .content { padding: 20px; display: grid; gap: 16px; }
+
+      .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+      .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; box-shadow: var(--shadow); }
+      .kpi { display: grid; gap: 6px; }
+      .kpi .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+      .kpi .value { font-size: 24px; font-weight: 800; letter-spacing: -0.4px; }
+      .kpi .delta { font-size: 12px; color: var(--success); }
+
+      .charts { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; }
+      .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+      .chart-title { font-weight: 700; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+      .table-card { padding: 0; overflow: hidden; }
+      .table-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+      .table-title { font-weight: 700; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+      .table-wrap { overflow: auto; }
+      table { width: 100%; border-collapse: collapse; }
+      thead th { position: sticky; top: 0; background: var(--card); border-bottom: 1px solid var(--border); text-align: left; font-size: 12px; color: var(--muted); padding: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+      tbody td { border-bottom: 1px solid var(--border); padding: 12px; font-size: 14px; }
+      tbody tr:hover { background: rgba(0,0,0,0.03); }
+      html.dark tbody tr:hover { background: rgba(255,255,255,0.03); }
+
+      .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 999px; font-size: 12px; border: 1px solid var(--border); background: var(--bg); }
+      .badge .dot { width: 8px; height: 8px; border-radius: 999px; }
+      .dot.success { background: var(--success); }
+      .dot.warning { background: var(--warning); }
+      .dot.danger { background: var(--danger); }
+      .dot.info { background: var(--primary); }
+
+      /* Sidebar (mobile) */
+      .sidebar-toggle { display: none; }
+      .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 30; }
+
+      @media (max-width: 1024px) {
+        .kpis { grid-template-columns: repeat(2, 1fr); }
+        .charts { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 860px) {
+        .layout { grid-template-columns: 1fr; }
+        .sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 280px; transform: translateX(-100%); transition: transform 0.2s ease; z-index: 40; }
+        .sidebar.open { transform: translateX(0); }
+        .sidebar-toggle { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); }
+        .overlay.show { display: block; }
+        .search { width: 100%; }
+      }
+    </style>
+    <script>
+      // Prevent theme flash
+      (function () {
+        try {
+          const saved = localStorage.getItem('theme');
+          const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if ((saved === 'dark') || (!saved && prefersDark)) {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (_) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar" id="sidebar">
+        <div class="brand">
+          <div class="brand-logo" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M4 4h7v7H4z" fill="currentColor"/>
+              <path d="M13 4h7v7h-7zM4 13h7v7H4z" fill="currentColor" opacity=".5"/>
+              <path d="M13 13h7v7h-7z" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="brand-name">Nova ERP</div>
+        </div>
+        <div class="section-title">Menu</div>
+        <nav class="nav">
+          <a class="active" href="#">
+            <svg class="icon" viewBox="0 0 24 24" fill="none">
+              <path d="M3 11l9-7 9 7v8a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2v-8z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Dashboard</span>
+          </a>
+          <a href="#">
+            <svg class="icon" viewBox="0 0 24 24" fill="none">
+              <path d="M3 3h18v4H3zM3 10h18v4H3zM3 17h18v4H3z" stroke="currentColor" stroke-width="1.6"/>
+            </svg>
+            <span>Sales</span>
+          </a>
+          <a href="#">
+            <svg class="icon" viewBox="0 0 24 24" fill="none">
+              <path d="M3 7h18M3 12h18M3 17h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            <span>Inventory</span>
+          </a>
+          <a href="#">
+            <svg class="icon" viewBox="0 0 24 24" fill="none">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M7 10l5-5 5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Purchases</span>
+          </a>
+          <a href="#">
+            <svg class="icon" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M12 7v10M7 12h10" stroke="currentColor" stroke-width="1.6"/>
+            </svg>
+            <span>Finance</span>
+          </a>
+          <a href="#">
+            <svg class="icon" viewBox="0 0 24 24" fill="none">
+              <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10z" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M3 21a9 9 0 0 1 18 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            <span>HR</span>
+          </a>
+          <a href="#">
+            <svg class="icon" viewBox="0 0 24 24" fill="none">
+              <path d="M4 4h16v16H4z" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M4 10h16M10 4v16" stroke="currentColor" stroke-width="1.6"/>
+            </svg>
+            <span>Reports</span>
+          </a>
+          <a href="#">
+            <svg class="icon" viewBox="0 0 24 24" fill="none">
+              <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01A1.65 1.65 0 0 0 9 3.09V3a2 2 0 1 1 4 0v.09c0 .67.39 1.27 1 1.51a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01c.24.61.84 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Settings</span>
+          </a>
+        </nav>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="topbar-row">
+            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle menu">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <div class="topbar-title">Dashboard</div>
+            <div class="spacer"></div>
+            <div class="search" role="search">
+              <svg class="s-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M20 20l-3.2-3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+              <input id="globalSearch" type="search" placeholder="Search orders, customers, products…" aria-label="Search" />
+            </div>
+            <div class="toolbar">
+              <label class="switch" title="Toggle theme">
+                <input id="themeToggle" type="checkbox" aria-label="Toggle dark mode" />
+                <span class="track"></span>
+                <span class="thumb"></span>
+              </label>
+              <div style="width:32px;height:32px;border-radius:999px;background:var(--primary-weak);display:grid;place-items:center;border:1px solid var(--border);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10z" stroke="currentColor" stroke-width="1.6"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <section class="content">
+          <div class="kpis">
+            <div class="card kpi">
+              <div class="label">Revenue</div>
+              <div class="value" id="kpiRevenue">$0</div>
+              <div class="delta" id="kpiRevenueDelta">+0% MoM</div>
+            </div>
+            <div class="card kpi">
+              <div class="label">Orders</div>
+              <div class="value" id="kpiOrders">0</div>
+              <div class="delta" id="kpiOrdersDelta">+0% MoM</div>
+            </div>
+            <div class="card kpi">
+              <div class="label">Customers</div>
+              <div class="value" id="kpiCustomers">0</div>
+              <div class="delta" id="kpiCustomersDelta">+0 new</div>
+            </div>
+            <div class="card kpi">
+              <div class="label">Inventory Value</div>
+              <div class="value" id="kpiInventory">$0</div>
+              <div class="delta" id="kpiInventoryDelta">Stable</div>
+            </div>
+          </div>
+
+          <div class="charts">
+            <div class="card">
+              <div class="chart-header">
+                <div class="chart-title">Sales (Last 12 months)</div>
+              </div>
+              <canvas id="salesChart" height="120"></canvas>
+            </div>
+            <div class="card">
+              <div class="chart-header">
+                <div class="chart-title">Orders by Status</div>
+              </div>
+              <canvas id="statusChart" height="120"></canvas>
+            </div>
+          </div>
+
+          <div class="card table-card">
+            <div class="table-header">
+              <div class="table-title">Recent Orders</div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <button id="resetSearch" title="Clear search" style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card);">Clear</button>
+                <button title="Export CSV" id="exportCsv" style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card);">Export CSV</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Channel</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody id="ordersTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <div class="overlay" id="overlay" aria-hidden="true"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      (function () {
+        const html = document.documentElement;
+        const themeToggle = document.getElementById('themeToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const overlay = document.getElementById('overlay');
+        const searchInput = document.getElementById('globalSearch');
+        const resetSearchBtn = document.getElementById('resetSearch');
+        const exportCsvBtn = document.getElementById('exportCsv');
+
+        // Seed data
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const salesByMonth = [12000, 14500, 17200, 21000, 19000, 23000, 25000, 26800, 25500, 29000, 31500, 34000];
+        const orders = [
+          { id: 'SO-1041', customer: 'Acme Corp', date: '2025-09-28', status: 'Shipped', channel: 'Online', total: 2180.35 },
+          { id: 'SO-1042', customer: 'Blue Sky LLC', date: '2025-09-29', status: 'Pending', channel: 'Retail', total: 540.00 },
+          { id: 'SO-1043', customer: 'Nimbus Inc', date: '2025-09-30', status: 'Cancelled', channel: 'Online', total: 0.00 },
+          { id: 'SO-1044', customer: 'Vertex Ltd', date: '2025-10-01', status: 'Shipped', channel: 'Wholesale', total: 4150.90 },
+          { id: 'SO-1045', customer: 'Orion Co', date: '2025-10-02', status: 'Returned', channel: 'Online', total: 0.00 },
+          { id: 'SO-1046', customer: 'Pioneer LLC', date: '2025-10-03', status: 'Shipped', channel: 'Retail', total: 780.50 },
+          { id: 'SO-1047', customer: 'Quanta Labs', date: '2025-10-03', status: 'Pending', channel: 'Online', total: 310.00 },
+          { id: 'SO-1048', customer: 'Summit SA', date: '2025-10-04', status: 'Shipped', channel: 'Online', total: 1260.20 },
+          { id: 'SO-1049', customer: 'Helix Partners', date: '2025-10-05', status: 'Shipped', channel: 'Retail', total: 980.00 },
+          { id: 'SO-1050', customer: 'Atlas Group', date: '2025-10-06', status: 'Pending', channel: 'Wholesale', total: 1630.00 }
+        ];
+        const products = [
+          { name: 'Widget A', stock: 120, unitCost: 12.5 },
+          { name: 'Widget B', stock: 80, unitCost: 18.0 },
+          { name: 'Gadget C', stock: 50, unitCost: 32.0 },
+          { name: 'Component D', stock: 200, unitCost: 6.2 }
+        ];
+
+        // KPIs
+        const formatMoney = (n) => n.toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+        const unique = (arr) => Array.from(new Set(arr));
+
+        const kpiRevenue = document.getElementById('kpiRevenue');
+        const kpiOrders = document.getElementById('kpiOrders');
+        const kpiCustomers = document.getElementById('kpiCustomers');
+        const kpiInventory = document.getElementById('kpiInventory');
+
+        function computeKpis() {
+          const shippedRevenue = orders.filter(o => o.status === 'Shipped').reduce((s, o) => s + o.total, 0);
+          const orderCount = orders.length;
+          const customers = unique(orders.map(o => o.customer)).length;
+          const inventoryValue = products.reduce((s, p) => s + p.stock * p.unitCost, 0);
+
+          kpiRevenue.textContent = formatMoney(shippedRevenue);
+          kpiOrders.textContent = orderCount.toLocaleString();
+          kpiCustomers.textContent = customers.toLocaleString();
+          kpiInventory.textContent = formatMoney(inventoryValue);
+
+          document.getElementById('kpiRevenueDelta').textContent = '+6.2% MoM';
+          document.getElementById('kpiOrdersDelta').textContent = '+4.1% MoM';
+          document.getElementById('kpiCustomersDelta').textContent = '+18 new';
+          document.getElementById('kpiInventoryDelta').textContent = 'Stable';
+        }
+
+        // Orders table
+        const ordersTbody = document.getElementById('ordersTbody');
+        function statusBadge(status) {
+          const map = {
+            Shipped: { dot: 'success' },
+            Pending: { dot: 'warning' },
+            Cancelled: { dot: 'danger' },
+            Returned: { dot: 'danger' },
+          };
+          const cls = map[status]?.dot || 'info';
+          return `<span class="badge"><span class="dot ${cls}"></span>${status}</span>`;
+        }
+        function renderOrders(data) {
+          ordersTbody.innerHTML = data.map(o => `
+            <tr>
+              <td>${o.id}</td>
+              <td>${o.customer}</td>
+              <td>${new Date(o.date).toLocaleDateString()}</td>
+              <td>${statusBadge(o.status)}</td>
+              <td>${o.channel}</td>
+              <td>${formatMoney(o.total)}</td>
+            </tr>`).join('');
+        }
+
+        // Search
+        function applySearchFilter() {
+          const q = searchInput.value.trim().toLowerCase();
+          if (!q) { renderOrders(orders); return; }
+          const filtered = orders.filter(o =>
+            o.id.toLowerCase().includes(q) ||
+            o.customer.toLowerCase().includes(q) ||
+            o.status.toLowerCase().includes(q) ||
+            o.channel.toLowerCase().includes(q)
+          );
+          renderOrders(filtered);
+        }
+
+        // Charts
+        const css = getComputedStyle(document.documentElement);
+        function chartColors() {
+          const text = css.getPropertyValue('--text').trim();
+          const muted = css.getPropertyValue('--muted').trim();
+          const border = css.getPropertyValue('--border').trim();
+          const primary = css.getPropertyValue('--primary').trim();
+          return { text, muted, border, primary };
+        }
+
+        let salesChart, statusChart;
+        function buildCharts() {
+          const { text, muted, border, primary } = chartColors();
+          const salesCtx = document.getElementById('salesChart').getContext('2d');
+          const statusCtx = document.getElementById('statusChart').getContext('2d');
+
+          const gridColor = html.classList.contains('dark') ? 'rgba(255,255,255,0.08)' : 'rgba(15, 23, 42, 0.08)';
+
+          if (salesChart) salesChart.destroy();
+          if (statusChart) statusChart.destroy();
+
+          salesChart = new Chart(salesCtx, {
+            type: 'line',
+            data: {
+              labels: months,
+              datasets: [{
+                label: 'Revenue',
+                data: salesByMonth,
+                borderColor: primary,
+                backgroundColor: primary,
+                tension: 0.36,
+                borderWidth: 2,
+                pointRadius: 2,
+                fill: false
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false, labels: { color: muted } },
+                tooltip: { callbacks: { label: ctx => `${formatMoney(ctx.parsed.y)}` } }
+              },
+              scales: {
+                x: { ticks: { color: muted }, grid: { color: gridColor } },
+                y: { ticks: { color: muted }, grid: { color: gridColor }, suggestedMin: 0 }
+              }
+            }
+          });
+
+          const counts = ['Shipped','Pending','Cancelled','Returned'].map(s => orders.filter(o => o.status === s).length);
+          statusChart = new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+              labels: ['Shipped','Pending','Cancelled','Returned'],
+              datasets: [{
+                data: counts,
+                backgroundColor: [
+                  'rgba(22, 163, 74, 0.85)',
+                  'rgba(245, 158, 11, 0.85)',
+                  'rgba(239, 68, 68, 0.85)',
+                  'rgba(99, 102, 241, 0.85)'
+                ],
+                borderColor: border
+              }]
+            },
+            options: {
+              plugins: {
+                legend: { position: 'bottom', labels: { color: text } }
+              }
+            }
+          });
+        }
+
+        // Sidebar (mobile)
+        function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('show'); }
+        function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+
+        // Theme
+        function setTheme(dark) {
+          html.classList.toggle('dark', dark);
+          themeToggle.checked = dark;
+          try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch (_) {}
+          buildCharts();
+        }
+
+        // Export CSV
+        function exportCsv() {
+          const headers = ['ID','Customer','Date','Status','Channel','Total'];
+          const rows = Array.from(ordersTbody.querySelectorAll('tr')).map(tr => Array.from(tr.children).map(td => td.textContent.replace(/\$/g, '').trim()));
+          const csv = [headers, ...rows].map(cols => cols.map(v => `"${String(v).replaceAll('"','""')}"`).join(',')).join('\n');
+          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = 'orders.csv';
+          document.body.appendChild(a); a.click(); a.remove();
+          URL.revokeObjectURL(url);
+        }
+
+        // Init
+        computeKpis();
+        renderOrders(orders);
+        buildCharts();
+
+        // Wire events
+        overlay.addEventListener('click', closeSidebar);
+        sidebarToggle.addEventListener('click', () => {
+          if (sidebar.classList.contains('open')) closeSidebar(); else openSidebar();
+        });
+        window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSidebar(); });
+
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) themeToggle.checked = savedTheme === 'dark';
+        themeToggle.addEventListener('change', (e) => setTheme(e.target.checked));
+
+        searchInput.addEventListener('input', applySearchFilter);
+        resetSearchBtn.addEventListener('click', () => { searchInput.value = ''; applySearchFilter(); searchInput.focus(); });
+        exportCsvBtn.addEventListener('click', exportCsv);
+      })();
+    </script>
+  </body>
+</html>
