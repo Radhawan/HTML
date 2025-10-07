@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ERP Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__brand">
+      <div class="brand__logo">ERP</div>
+      <div class="brand__name">Aurora Corp</div>
+    </div>
+    <nav class="sidebar__nav">
+      <a class="nav__item is-active" href="#"><span class="icon">🏠</span>Dashboard</a>
+      <a class="nav__item" href="#"><span class="icon">📦</span>Inventory</a>
+      <a class="nav__item" href="#"><span class="icon">🧾</span>Orders</a>
+      <a class="nav__item" href="#"><span class="icon">👥</span>Customers</a>
+      <a class="nav__item" href="#"><span class="icon">💼</span>Procurement</a>
+      <a class="nav__item" href="#"><span class="icon">💰</span>Finance</a>
+      <a class="nav__item" href="#"><span class="icon">⚙️</span>Settings</a>
+    </nav>
+    <div class="sidebar__footer">
+      <button id="collapseSidebar" class="button button--ghost" title="Collapse sidebar">⟨⟨</button>
+    </div>
+  </aside>
+
+  <div class="app">
+    <header class="topbar">
+      <button id="openSidebar" class="button button--ghost mobile-only" aria-label="Open sidebar">☰</button>
+      <div class="search">
+        <input id="searchInput" type="search" placeholder="Search modules, orders, customers…" />
+      </div>
+      <div class="topbar__spacer"></div>
+      <div class="topbar__actions">
+        <button id="themeToggle" class="button" aria-label="Toggle theme">🌙</button>
+        <div class="user">
+          <img class="user__avatar" src="https://i.pravatar.cc/40?img=12" alt="User avatar" />
+          <span class="user__name">Alex Rivera</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <section class="cards">
+        <div class="card kpi">
+          <div class="kpi__label">Revenue (MTD)</div>
+          <div class="kpi__value">$482,940</div>
+          <div class="kpi__delta is-up">+8.2%</div>
+        </div>
+        <div class="card kpi">
+          <div class="kpi__label">Orders</div>
+          <div class="kpi__value">3,284</div>
+          <div class="kpi__delta is-up">+3.1%</div>
+        </div>
+        <div class="card kpi">
+          <div class="kpi__label">Fulfillment SLA</div>
+          <div class="kpi__value">96.4%</div>
+          <div class="kpi__delta is-down">-0.7%</div>
+        </div>
+        <div class="card kpi">
+          <div class="kpi__label">Stockouts</div>
+          <div class="kpi__value">12</div>
+          <div class="kpi__delta is-down">-2</div>
+        </div>
+      </section>
+
+      <section class="grids">
+        <div class="panel">
+          <div class="panel__header">
+            <h3>Sales Overview</h3>
+            <div class="panel__actions">
+              <select id="salesRange">
+                <option value="7">Last 7 days</option>
+                <option value="30" selected>Last 30 days</option>
+                <option value="90">Last 90 days</option>
+              </select>
+            </div>
+          </div>
+          <canvas id="salesChart" height="120"></canvas>
+        </div>
+
+        <div class="panel">
+          <div class="panel__header">
+            <h3>Inventory Health</h3>
+          </div>
+          <div class="inventory">
+            <div class="inventory__stat">
+              <div class="label">SKUs</div>
+              <div class="value">1,248</div>
+            </div>
+            <div class="inventory__stat">
+              <div class="label">Low Stock</div>
+              <div class="value">38</div>
+            </div>
+            <div class="inventory__stat">
+              <div class="label">Backordered</div>
+              <div class="value">9</div>
+            </div>
+            <div class="inventory__stat">
+              <div class="label">Avg. Days on Hand</div>
+              <div class="value">46</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel__header">
+            <h3>Open Orders</h3>
+            <div class="panel__actions">
+              <button class="button button--ghost" id="refreshOrders">↻</button>
+            </div>
+          </div>
+          <div class="table">
+            <div class="table__head">
+              <div>Order</div>
+              <div>Customer</div>
+              <div>Status</div>
+              <div>Total</div>
+              <div>ETA</div>
+            </div>
+            <div class="table__body" id="ordersTable">
+              <!-- Rows injected via JS -->
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel__header">
+            <h3>Top Customers</h3>
+          </div>
+          <div class="list" id="topCustomers">
+            <!-- Items injected via JS -->
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
