@@ -1,0 +1,34 @@
+Course reference material: Enumeration (Penetration Testing)
+
+Enumeration is the stage after host/port discovery where the tester actively
+connects to the services found and extracts as much detail as possible:
+software and versions, user and account names, shares, directories, and
+misconfigurations. The quality of enumeration decides how good the later
+exploitation is.
+
+Topics this material covers:
+
+1. What enumeration is, and how it differs from scanning. Scanning finds which
+   ports are open; enumeration asks each service what it is and what it will
+   tell you.
+
+2. Service/version detection as the handoff from scanning. Knowing the exact
+   version of a service lets you look up known weaknesses.
+
+3. Web enumeration: reading response headers, robots.txt and sitemap, and
+   directory/content discovery with a wordlist. Finding hidden paths and the
+   technology stack behind a site.
+
+4. SMB enumeration: listing shares and users, null sessions, and what each share
+   can leak.
+
+5. FTP enumeration: anonymous login and what files are exposed.
+
+6. DNS enumeration: zone transfers and subdomain discovery.
+
+7. Turning enumeration results into a target list: which versions, which users,
+   which paths are worth attacking next.
+
+Note: the material is tool-light on purpose — focus on the concept of each
+enumeration target, then show a representative command. Keep practice within
+authorized lab ranges only.

@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: walkthrough-matches-questions
+expected_outcome: |
+  A walkthrough JSON in the platform schema that corresponds 1:1 to the
+  questions file: the same graded tasks in the same order, every stored Answer
+  unchanged. Each solution task explains the step in plain language, shows the
+  real command(s) and what each does, and the expected output. The text
+  contains no "why this matters" / "why is this important" rhetorical asides.
+context:
+  scaffold_script: place-files.sh

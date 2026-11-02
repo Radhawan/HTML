@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: rephrase-preserves-answers
+expected_outcome: |
+  A JSON file in the same platform schema as the input (array -> page ->
+  children). Every task's Question HTML is rewritten as an indirect, in-world
+  challenge; no question body names a tool, flag, command, protocol, or
+  signature file. Every Answer value is identical to the input, and
+  Answer/Camouflage remain JSON-encoded strings while Choices/Hints remain
+  arrays. The file opens with an introduction/storyline task.
+context:
+  scaffold_script: place-files.sh

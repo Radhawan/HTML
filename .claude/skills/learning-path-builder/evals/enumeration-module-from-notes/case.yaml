@@ -1,0 +1,13 @@
+schema_version: "1.1"
+name: enumeration-module-from-notes
+expected_outcome: |
+  An "Enumeration" module in the platform JSON schema, placed in the
+  Penetration Testing path, that covers the concepts in the provided notes
+  (web, SMB, FTP, DNS enumeration, and service/version detection as the handoff
+  from scanning) and fills thin spots with researched, current commands. Lessons
+  go fundamentals -> advanced; each has objectives, a hands-on lab with real
+  commands and expected output explained plainly, and a summary; quizzes appear
+  along the way. The report notes what was added beyond the provided notes. The
+  JSON validates with the module checker.
+context:
+  scaffold_script: place-files.sh

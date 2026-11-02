@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: nmap-course-from-topic
+expected_outcome: |
+  A module in the platform JSON schema (array -> page -> children) whose page
+  title is about Nmap and whose intro places it in the Penetration Testing
+  path. Lessons progress from fundamentals to advanced; each lesson has
+  objectives, a hands-on lab with real, current nmap commands and expected
+  output explained in plain language, and a summary. The module includes
+  quizzes using at least two question types, encoded with correct answers in
+  Answer and decoys in Camouflage. The JSON validates with the module checker.

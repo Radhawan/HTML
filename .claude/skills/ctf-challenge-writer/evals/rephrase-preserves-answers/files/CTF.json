@@ -1,0 +1,348 @@
+[
+  {
+    "id": 1000,
+    "text": "BrewMaster Coffee Co.: The Rushed Portal (Easy) - CTF Challenge",
+    "type": "page",
+    "children": [
+      {
+        "id": 9584,
+        "text": "Lab Overview",
+        "type": "task",
+        "Question_Title": "Lab Overview",
+        "Question": "<h2>BrewMaster Coffee Co.: The Rushed Portal</h2>\n<h3>Before you start</h3>\n<ol>\n<li style=\"font-size:12pt;\">Start the lab and connect your <strong>Kali</strong> attacker box.</li>\n<li style=\"font-size:12pt;\">Your target, the <strong>Roastery</strong> server, is at <code>172.16.20.0/24</code> LAN.</li>\n</ol>\n<h3>Walkthrough: <a href=\"../../lab/brewmaster-coffee-co-the-rushed-portal\" target=\"_blank\" rel=\"noreferrer noopener\">https://cybertask.com/lab/brewmaster-coffee-co-the-rushed-portal</a></h3>\n<h3>Storyline</h3>\n<p style=\"font-size:12pt;\"><strong>BrewMaster Coffee Co.</strong> is a small independent coffee roaster in Norfolk, VA. To let baristas check the weekly roast schedule from home, the owner rushed out a <em>staff web portal</em> and set up an <em>FTP file drop</em> - then went back to roasting beans. Nobody hardened anything. You have been hired as a junior penetration tester to find out how far an attacker could get.</p>\n<h3>Scope</h3>\n<ul>\n<li style=\"font-size:12pt;\"><strong>In scope:</strong> the single target host in <code>172.16.20.0/24</code>.</li>\n<li style=\"font-size:12pt;\"><strong>Out of scope:</strong> denial-of-service and any destructive action.</li>\n</ul>\n<h3>What you will practice</h3>\n<ul>\n<li style=\"font-size:12pt;\">Port scanning and service/version detection</li>\n<li style=\"font-size:12pt;\">Enumerating an anonymous FTP service</li>\n<li style=\"font-size:12pt;\">Web content discovery</li>\n<li style=\"font-size:12pt;\">SQL injection - authentication bypass, straight from the browser</li>\n<li style=\"font-size:12pt;\">Credential reuse to gain an SSH foothold</li>\n<li style=\"font-size:12pt;\">Linux privilege escalation via a sudo misconfiguration (GTFOBins)</li>\n</ul>\n<h3>Flags</h3>\n<p style=\"font-size:12pt;\">There are two flags. Both use the format <code>BrewMaster{...}</code>:</p>\n<ul>\n<li style=\"font-size:12pt;\"><code>user.txt</code> - in the foothold user home directory.</li>\n<li style=\"font-size:12pt;\"><code>root.txt</code> - in <code>/root</code>.</li>\n</ul>\n<h3>Scoring</h3>\n<p style=\"font-size:12pt;\">11 graded tasks · <strong>150 points total</strong>. Hints carry small penalties.</p>\n<p style=\"font-size:12pt;\"><strong>Let's Start !</strong></p>",
+        "Answer": "[]",
+        "Camouflage": "[]",
+        "Category": "27",
+        "Task_Type": "5",
+        "Score": "0",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [],
+        "Choices": []
+      },
+      {
+        "id": 9585,
+        "text": "Scanning the Target",
+        "type": "task",
+        "Question_Title": "Scanning the Target",
+        "Question": "<p style=\"font-size:12pt;\">Begin with reconnaissance and map the target's attack surface.</p><p style=\"font-size:12pt;\"><strong>Question:</strong> How many TCP ports are open on the target?</p><p style=\"font-size:12pt;\"><strong>Answer Format:</strong> a single number, e.g. <code>2</code></p>",
+        "Answer": "[{\"value\":\"3\",\"__isValid\":true,\"__tagId\":\"1a08e962-1d9f-4f4a-8f3d-3cc2a4d6ef26\"}]",
+        "Camouflage": "[]",
+        "Category": "35",
+        "Task_Type": "1",
+        "Score": "10",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10276,
+            "text": "Run nmap -sV against the target and count the lines that say \"open\".",
+            "penalty": 3
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9586,
+        "text": "Fingerprinting the Web Server",
+        "type": "task",
+        "Question_Title": "Fingerprinting the Web Server",
+        "Question": "<p style=\"font-size:12pt;\">A web service is exposed on the target. Fingerprint it before browsing the application.</p><p style=\"font-size:12pt;\"><strong>Question:</strong> What is the web server software and version?</p><p style=\"font-size:12pt;\"><strong>Answer Format:</strong> <code>Software/X.Y.Z (Ubuntu)</code></p>",
+        "Answer": "[{\"value\": \"Apache/2.4.52 (Ubuntu)\"}, {\"value\": \"Apache/2.4.52\"}, {\"value\": \"2.4.52\"}]",
+        "Camouflage": "[]",
+        "Category": "79",
+        "Task_Type": "2",
+        "Score": "10",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10277,
+            "text": "Look at the Server: header from curl -sI, or the port 80 line in nmap -sV.",
+            "penalty": 3
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9587,
+        "text": "Probing Anonymous FTP",
+        "type": "task",
+        "Question_Title": "Probing Anonymous FTP",
+        "Question": "<p style=\"font-size:12pt;\">One of the exposed services permits anonymous access and is sharing a file.</p><p style=\"font-size:12pt;\"><strong>Question:</strong> What is the filename available on the anonymous FTP share?</p><p style=\"font-size:12pt;\"><strong>Answer Format:</strong> <code>name.ext</code></p>",
+        "Answer": "[{\"value\": \"staff-memo.txt\"}]",
+        "Camouflage": "[]",
+        "Category": "11",
+        "Task_Type": "1",
+        "Score": "10",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10278,
+            "text": "Log in with the username anonymous and any password, then list the directory.",
+            "penalty": 3
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9588,
+        "text": "Reading the Leaked Memo",
+        "type": "task",
+        "Question_Title": "Reading the Leaked Memo",
+        "Question": "<p style=\"font-size:12pt;\">Retrieve and read the shared file - it leaks internal details about the company and its systems.</p><p style=\"font-size:12pt;\"><strong>Question:</strong> According to the memo, which username has access to the server?</p><p style=\"font-size:12pt;\"><strong>Answer Format:</strong> a single username</p>",
+        "Answer": "[{\"value\": \"jrivera\"}]",
+        "Camouflage": "[]",
+        "Category": "11",
+        "Task_Type": "1",
+        "Score": "10",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10279,
+            "text": "The memo names the person who handles maintenance and has server access.",
+            "penalty": 3
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9589,
+        "text": "Discovering the Staff Portal",
+        "type": "task",
+        "Question_Title": "Discovering the Staff Portal",
+        "Question": "<p style=\"font-size:12pt;\">The memo refers to a staff-only area that is not linked from the home page. Enumerate the web server - its robots.txt is a good place to start.</p><p style=\"font-size:12pt;\"><strong>Question:</strong> What hidden path is revealed by the web server's robots.txt?</p><p style=\"font-size:12pt;\"><strong>Answer Format:</strong> <code>/path/</code></p>",
+        "Answer": "[{\"value\": \"/portal/\"}, {\"value\": \"/portal\"}, {\"value\": \"portal\"}]",
+        "Camouflage": "[]",
+        "Category": "5",
+        "Task_Type": "2",
+        "Score": "10",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10280,
+            "text": "robots.txt has a single Disallow line - that is the path.",
+            "penalty": 3
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9590,
+        "text": "Identifying the Login Flaw",
+        "type": "task",
+        "Question_Title": "Identifying the Login Flaw",
+        "Question": "<p style=\"font-size:12pt;\">Examine the staff login page you discovered.</p><p style=\"font-size:12pt;\"><strong>Question:</strong> What class of web vulnerability does the login form suffer from?</p><p style=\"font-size:12pt;\"><strong>Answer Format:</strong> the vulnerability's name</p>",
+        "Answer": "[{\"value\": \"SQL Injection\"}, {\"value\": \"SQLi\"}, {\"value\": \"sql injection\"}, {\"value\": \"sqli\"}]",
+        "Camouflage": "[]",
+        "Category": "33",
+        "Task_Type": "2",
+        "Score": "10",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10281,
+            "text": "A single quote breaking a login query is the signature of this injection flaw.",
+            "penalty": 3
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9591,
+        "text": "Bypassing the Login (SQL Injection)",
+        "type": "task",
+        "Question_Title": "Bypassing the Login (SQL Injection)",
+        "Question": "<p style=\"font-size:12pt;\">Exploit that vulnerability to get past the login. The dashboard that loads lists the company's staff accounts.</p><p style=\"font-size:12pt;\"><strong>Question:</strong> After bypassing the login, how many staff accounts are listed on the dashboard?</p><p style=\"font-size:12pt;\"><strong>Answer Format:</strong> a single number</p>",
+        "Answer": "[{\"value\": \"4\"}]",
+        "Camouflage": "[]",
+        "Category": "33",
+        "Task_Type": "1",
+        "Score": "15",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10282,
+            "text": "Try username  admin' -- -  with any password, then count the rows in the staff table.",
+            "penalty": 5
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9592,
+        "text": "Enumerating the Database with sqlmap",
+        "type": "task",
+        "Question_Title": "Enumerating the Database with sqlmap",
+        "Question": "<p style=\"font-size:12pt;\">The login you just bypassed is fully injectable. Point an automated tool at it and fingerprint the back-end database.</p><p style=\"font-size:12pt;\"><strong>Question:</strong> What is the back-end DBMS version?</p><p style=\"font-size:12pt;\"><strong>Answer Format:</strong> the version string, e.g. <code>X.Y.Z-Name-...</code></p>",
+        "Answer": "[{\"value\": \"10.6.23-MariaDB-0ubuntu0.22.04.1\"}, {\"value\": \"10.6.23-MariaDB\"}, {\"value\": \"10.6.23\"}, {\"value\": \"MariaDB 10.6.23\"}]",
+        "Camouflage": "[]",
+        "Category": "33",
+        "Task_Type": "2",
+        "Score": "10",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10283,
+            "text": "sqlmap --banner prints the exact version; or test @@version LIKE '10.6%' through the login's true/false response.",
+            "penalty": 3
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9593,
+        "text": "Enumerating the Accessible Databases",
+        "type": "task",
+        "Question_Title": "Enumerating the Accessible Databases",
+        "Question": "<p style=\"font-size:12pt;\">Using the same injection, list the databases the application's database account can reach.</p><p style=\"font-size:12pt;\"><strong>Question:</strong> How many databases are accessible to the application's database account?</p><p style=\"font-size:12pt;\"><strong>Answer Format:</strong> a single number</p>",
+        "Answer": "[{\"value\": \"2\"}]",
+        "Camouflage": "[]",
+        "Category": "33",
+        "Task_Type": "1",
+        "Score": "10",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10284,
+            "text": "sqlmap --dbs prints 'available databases [N]'.",
+            "penalty": 3
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9594,
+        "text": "Mapping the staff Table",
+        "type": "task",
+        "Question_Title": "Mapping the staff Table",
+        "Question": "<p style=\"font-size:12pt;\">Enumerate the structure of the table that stores the staff credentials.</p><p style=\"font-size:12pt;\"><strong>Question:</strong> How many columns does the staff table have?</p><p style=\"font-size:12pt;\"><strong>Answer Format:</strong> a single number</p>",
+        "Answer": "[{\"value\": \"4\"}]",
+        "Camouflage": "[]",
+        "Category": "33",
+        "Task_Type": "1",
+        "Score": "10",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10285,
+            "text": "sqlmap -D brewmaster -T staff --columns lists them; count the rows.",
+            "penalty": 3
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9595,
+        "text": "Extracting jrivera's Credentials",
+        "type": "task",
+        "Question_Title": "Extracting jrivera's Credentials",
+        "Question": "<p style=\"font-size:12pt;\">The dashboard exposes sensitive account data in clear text.</p><p style=\"font-size:12pt;\"><strong>Question:</strong> What is jrivera's password?</p><p style=\"font-size:12pt;\"><strong>Answer Format:</strong> the password string</p>",
+        "Answer": "[{\"value\": \"Espresso@2024\"}]",
+        "Camouflage": "[]",
+        "Category": "25",
+        "Task_Type": "1",
+        "Score": "15",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10286,
+            "text": "The dashboard prints every account's password. Read jrivera's row.",
+            "penalty": 5
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9596,
+        "text": "Foothold: SSH and the User Flag",
+        "type": "task",
+        "Question_Title": "Foothold: SSH and the User Flag",
+        "Question": "<p style=\"font-size:12pt;\">Use the credentials you recovered to gain interactive access to the server.</p><p style=\"font-size:12pt;\"><strong>Question:</strong> Submit the user flag from the foothold user's home directory.</p><p style=\"font-size:12pt;\"><strong>Answer Format:</strong> <code>BrewMaster{...}</code></p>",
+        "Answer": "[{\"value\":\"BrewMaster{83eced446d97a258af14ff56}\",\"__isValid\":true,\"__tagId\":\"06015f2b-03f9-4d74-bf8c-8b18c546efa3\"}]",
+        "Camouflage": "[]",
+        "Category": "12",
+        "Task_Type": "1",
+        "Score": "20",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10287,
+            "text": "Reuse the portal password: ssh jrivera@172.16.20.10 , then cat user.txt.",
+            "penalty": 5
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9597,
+        "text": "Enumerating Sudo Rights",
+        "type": "task",
+        "Question_Title": "Enumerating Sudo Rights",
+        "Question": "<p style=\"font-size:12pt;\">As the foothold user, look for a privilege-escalation path by reviewing what you may run as root.</p><p style=\"font-size:12pt;\"><strong>Question:</strong> Which binary can the foothold user run as root without a password?</p><p style=\"font-size:12pt;\"><strong>Answer Format:</strong> a full path, e.g. <code>/usr/bin/xxx</code></p>",
+        "Answer": "[{\"value\":\"/usr/bin/find\",\"__isValid\":true,\"__tagId\":\"ef7e71dd-f1e2-4bb2-8909-7a0ccc132221\"},{\"value\":\"find\",\"__isValid\":true,\"__tagId\":\"707cacb9-a954-4a28-bbb0-6261ce6c8df4\"}]",
+        "Camouflage": "[]",
+        "Category": "13",
+        "Task_Type": "2",
+        "Score": "15",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10288,
+            "text": "Run sudo -l - it prints exactly one NOPASSWD binary.",
+            "penalty": 3
+          }
+        ],
+        "Choices": []
+      },
+      {
+        "id": 9598,
+        "text": "Privilege Escalation: Root Flag",
+        "type": "task",
+        "Question_Title": "Privilege Escalation: Root Flag",
+        "Question": "<p style=\"font-size:12pt;\">Abuse that privilege to escalate to root.</p><p style=\"font-size:12pt;\"><strong>Question:</strong> Submit the root flag.</p><p style=\"font-size:12pt;\"><strong>Answer Format:</strong> <code>BrewMaster{...}</code></p>",
+        "Answer": "[{\"value\":\"BrewMaster{826d809e611b249613b1ec33}\",\"__isValid\":true,\"__tagId\":\"b9898f1d-3bc8-4897-892a-06ddebe6fd88\"}]",
+        "Camouflage": "[]",
+        "Category": "13",
+        "Task_Type": "1",
+        "Score": "25",
+        "Lose": "0",
+        "PartialCredit": 0,
+        "Visibility": 1,
+        "Hints": [
+          {
+            "id": 10289,
+            "text": "GTFOBins 'find': sudo find . -exec /bin/sh \\; -quit  then cat /root/root.txt.",
+            "penalty": 5
+          }
+        ],
+        "Choices": []
+      }
+    ]
+  }
+]
